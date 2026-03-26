@@ -1,23 +1,17 @@
 # claude-config
 
-Custom [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills and agents. Symlinked into `~/.claude/skills` and `~/.claude/agents`.
+Custom [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills. Symlinked into `~/.claude/skills`.
 
 ## Skills
 
-- **visual-explainer** — Generate self-contained HTML pages for technical diagrams, visualizations, and data tables
-- **diff-review** — Visual HTML diff review with before/after architecture comparison and code review analysis
-- **plan-review** — Visual HTML plan review comparing current codebase against a proposed implementation plan
-- **project-recap** — Visual HTML project recap for rebuilding mental model of a project's current state
-- **fact-check** — Verify factual accuracy of a document against the actual codebase, correct in place
 - **tdd** — Test-driven development with red-green-refactor loop
-
-## Agents
-
-- **visual-generator** — Subagent with visual-explainer preloaded; used by diff-review, plan-review, and project-recap via `context: fork`
+- **grill-me** — Interview the user relentlessly about a plan or design until reaching shared understanding
+- **write-a-prd** — Create a PRD through user interview, codebase exploration, and module design
+- **prd-to-issues** — Break a PRD into independently-grabbable Linear issues using vertical slices
+- **improve-codebase-architecture** — Explore a codebase for architectural improvements, focusing on deepening shallow modules
 
 ## Setup
 
 ```sh
-ln -s ~/.claude-config/skills ~/.claude/skills
-ln -s ~/.claude-config/agents ~/.claude/agents
+ln -s ~/personal/claude-config/skills ~/.claude/skills
 ```
