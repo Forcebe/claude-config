@@ -163,41 +163,6 @@ When a PR exists and `--draft` was not used, include at the end:
 
 Triggered by `--draft` flag or by saying "post as draft review" after a terminal review.
 
-Map structured findings to the GitHub pending review API. The key details:
+Read [references/draft-review.md](references/draft-review.md) for the full guide on posting — it covers the API format, review body template, and how to write conversational inline comments.
 
-1. **Build a single JSON file** containing the full request body — do NOT mix `--field` and `--input` with `gh api`.
-2. **Omit the `event` field entirely** — this creates a pending/draft review. Do NOT use `event: "PENDING"` (invalid value for the REST API).
-3. **Inline comments** must reference lines that exist in the diff. Use `side: "RIGHT"` for lines in the new version.
-4. **Findings that don't map to a specific diff line** (e.g., missing index suggestions) go in the review body instead of as inline comments.
-
-```bash
-# 1. Build the review JSON
-cat > /tmp/cr-review.json << 'EOF'
-{
-  "body": "<summary — context header + finding counts + any findings without a specific line>",
-  "comments": [
-    {
-      "path": "src/path/to/file.ts",
-      "line": 65,
-      "side": "RIGHT",
-      "body": "**[Warning] [Domain] Title**\n\nExplanation.\n\n**Recommendation:** What to do."
-    }
-  ]
-}
-EOF
-
-# 2. Post it
-gh api repos/{owner}/{repo}/pulls/{pull_number}/reviews \
-  --method POST \
-  --input /tmp/cr-review.json
-```
-
-**Comment formatting**: Each inline comment body should include the severity tag, domain attribution, title, explanation, and recommendation in a readable format. Keep comments concise — the detail is in the terminal output.
-
-When posting after a terminal review, use the stored structured findings from Step 4. Do not re-run the review agents.
-
-After posting, confirm with the PR URL:
-```
-Draft review created on PR #<number> with <n> inline comments. Open the PR in GitHub to review and submit:
-<pr-url>
-```
+Use the stored structured findings from Step 4 — do not re-run the review agents.
