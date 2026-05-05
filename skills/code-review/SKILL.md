@@ -62,11 +62,9 @@ Use the Agent tool with:
 
 ### 3. Review (6 parallel subagents)
 
-Spawn all six review agents in **a single assistant message containing exactly 6 `Agent` tool_use blocks**. They must be in the same message — if they're split across two messages (e.g., 5 spawned, then a follow-up message spawns the 6th), Claude Code renders them in separate panels and one will appear missing from the grouped summary. Before sending the message, count: there must be 6 tool_use blocks, one per subagent_type listed below.
+Spawn all six review agents in parallel — a single assistant message containing six `Agent` tool_use blocks, one per `subagent_type` below. Each receives the same context brief via the Agent tool's `prompt` parameter. The agents' system prompts (defined in their `.md` files) contain domain-specific mandates — you only need to pass the context.
 
-Each agent receives the same context brief via the Agent tool's `prompt` parameter. The agents' system prompts (defined in their `.md` files) contain domain-specific mandates — you only need to pass the context.
-
-The 6 required `subagent_type` values (all must be present in the single message):
+The 6 required `subagent_type` values:
 
 1. `cr-review-architecture`
 2. `cr-review-security`
@@ -74,6 +72,8 @@ The 6 required `subagent_type` values (all must be present in the single message
 4. `cr-review-testing`
 5. `cr-review-performance`
 6. `cr-review-readability`
+
+Note: Claude Code's grouped agent panel may display fewer than 6 entries because finished agents drop off as new ones complete. This is a UI rendering quirk, not a sign that an agent failed to run. Confirm by checking that all 6 returned structured findings before consolidating — if any are genuinely missing, re-spawn the missing ones.
 
 **The context brief includes:**
 - The full diff
