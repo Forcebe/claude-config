@@ -62,29 +62,18 @@ Use the Agent tool with:
 
 ### 3. Review (6 parallel subagents)
 
-Spawn all six review agents in parallel in a single message. Each receives the same context brief via the Agent tool's `prompt` parameter. The agents' system prompts (defined in their `.md` files) contain domain-specific mandates — you only need to pass the context.
+Spawn all six review agents in **a single assistant message containing exactly 6 `Agent` tool_use blocks**. They must be in the same message — if they're split across two messages (e.g., 5 spawned, then a follow-up message spawns the 6th), Claude Code renders them in separate panels and one will appear missing from the grouped summary. Before sending the message, count: there must be 6 tool_use blocks, one per subagent_type listed below.
 
-```
-Use the Agent tool six times in parallel:
+Each agent receives the same context brief via the Agent tool's `prompt` parameter. The agents' system prompts (defined in their `.md` files) contain domain-specific mandates — you only need to pass the context.
 
-  subagent_type: cr-review-architecture
-  prompt: <context brief>
+The 6 required `subagent_type` values (all must be present in the single message):
 
-  subagent_type: cr-review-security
-  prompt: <context brief>
-
-  subagent_type: cr-review-correctness
-  prompt: <context brief>
-
-  subagent_type: cr-review-testing
-  prompt: <context brief>
-
-  subagent_type: cr-review-performance
-  prompt: <context brief>
-
-  subagent_type: cr-review-readability
-  prompt: <context brief>
-```
+1. `cr-review-architecture`
+2. `cr-review-security`
+3. `cr-review-correctness`
+4. `cr-review-testing`
+5. `cr-review-performance`
+6. `cr-review-readability`
 
 **The context brief includes:**
 - The full diff
@@ -119,41 +108,48 @@ Do this in the main conversation — you have the full picture and can make judg
 
 #### Terminal (default)
 
+Produce the formatted review **exactly once** in a single message. Do not emit a preview, partial draft, or example before the final version. Consolidation in Step 4 happens silently — no user-facing text until you write this output.
+
+**Per-finding format** (used inside every severity section):
+
+```
+**[<Domain>, <Domain>] <title>**
+`<file>:<line-start>-<line-end>`
+<explanation>
+**Recommendation:** <recommendation>
+```
+
+Findings within a section are separated by a `---` line.
+
+**Top-level structure:**
+
 ```
 ## Code Review: <branch-name>
 
 ### Context
 - Branch: <branch> vs <base>
-- Linear: <issue-id> — <issue-title>       ← omit line if no issue found
-- PR: #<number> — <title>                   ← omit line if no PR
+- Linear: <issue-id> — <issue-title>       (omit if no issue)
+- PR: #<number> — <title>                  (omit if no PR)
 - Files changed: <n> | Additions: <n> | Deletions: <n>
 
 ### Critical (<count>)
-
-**[<Domain>, <Domain>] <title>**
-`<file>:<line-start>-<line-end>`
-<explanation>
-**Recommendation:** <recommendation>
-
----
-
-(repeat for each finding, separated by ---)
+<all critical findings, in per-finding format, separated by --->
 
 ### Warnings (<count>)
-(same format as above)
+<all warning findings, in per-finding format, separated by --->
 
 ### Suggestions (<count>)
-(same format as above)
+<all suggestions, in per-finding format, separated by --->
 ```
 
-Omit any severity section that has zero findings. If every section is empty:
+Omit any severity section that has zero findings. If every section is empty, output only:
 
 ```
 ### No issues found
 Reviewed for architecture, security, correctness, testing, performance, and readability.
 ```
 
-When a PR exists and `--draft` was not used, include at the end:
+When a PR exists and `--draft` was not used, append at the very end:
 
 ```
 > PR #<number> detected — say "post as draft review" to create a pending GitHub review with inline comments you can edit before submitting.
