@@ -31,23 +31,22 @@ Reviewed across architecture, security, correctness, testing, performance, and r
 
 ## Inline Comment Tone
 
-Write comments like a thoughtful colleague, not a linter. They should be conversational and to the point — the kind of comment you'd actually leave in a PR review. Do NOT copy the structured terminal output verbatim. Instead, rewrite each finding naturally.
+Write each comment in the voice defined in [comment-style.md](comment-style.md): plain, short, one point per comment, pitched at a competent engineer new to this repo. Do NOT copy the structured terminal output verbatim — rewrite each finding as flowing prose. An inline comment is already attached to a line, so drop the `file:line` reference and the `**Recommendation:**` label; fold the fix into the same sentences.
 
-**Bad (robotic):**
+**From this terminal finding:**
 ```
-**[Warning] [Performance] Repository queries fetch all columns including large JSONB metadata**
-
-`db.select()` retrieves all columns — the `metadata` JSONB column can contain large encrypted payloads...
-
-**Recommendation:** Project only needed columns...
-```
-
-**Good (human):**
-```
-This fetches all columns including the `metadata` JSONB, which can be pretty hefty — but we only use `status`, `provider`, `updatedAt`, and a quick check on `metadata.formulationDetails`. Worth projecting just the columns we need, similar to how `getArtifactMetadataByClientIds` does it.
+**[Performance] Repository queries fetch all columns including large JSONB metadata**
+`db/artifacts.ts:42`
+This selects every column, including the `metadata` JSONB which can be large...
+**Recommendation:** Select only `status`, `provider`, and `updatedAt`...
 ```
 
-The severity and domain info can go in a small tag at the start if helpful (e.g., `*[warning — performance]*`), but the body should read naturally. Keep each comment focused on one thing and short enough that the reviewer doesn't have to scroll.
+**To this inline comment:**
+```
+This selects every column, including the `metadata` JSONB which can be large. The code only reads `status`, `provider`, and `updatedAt`, so selecting just those avoids loading data we never use. `getArtifactMetadataByClientIds` already does it this way.
+```
+
+The severity and domain can go in a small tag at the start if helpful (e.g., `*[warning — performance]*`), but the body should read as prose.
 
 ## Posting
 

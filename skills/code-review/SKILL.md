@@ -102,13 +102,16 @@ Do this in the main conversation — you have the full picture and can make judg
 3. **Rank by severity**: Criticals first, then warnings, then suggestions.
 4. **Preserve attribution**: Tag each finding with the domain(s) that raised it (e.g., `[Security, Architecture]`).
 5. **Cap suggestions**: Keep at most 5 suggestions — pick the strongest. Criticals and warnings always survive regardless of count.
-6. **Store structured findings**: Retain the structured finding data for potential draft PR review posting later in the conversation.
+6. **Rewrite the prose for voice**: The agents return substance, not polished wording. Rewrite each finding's explanation and recommendation to match [references/comment-style.md](references/comment-style.md) — plain language for a competent engineer new to this repo. This is the step that fixes jargon-heavy, dense agent output; apply it before producing any output.
+7. **Store structured findings**: Retain the structured finding data for potential draft PR review posting later in the conversation.
 
 ### 5. Output
 
 #### Terminal (default)
 
 Produce the formatted review **exactly once** in a single message. Do not emit a preview, partial draft, or example before the final version. Consolidation in Step 4 happens silently — no user-facing text until you write this output.
+
+Every `<explanation>` and `<recommendation>` below must follow [references/comment-style.md](references/comment-style.md): plain, short, and pitched at a competent engineer new to this repo — not the raw agent wording.
 
 **Per-finding format** (used inside every severity section):
 
