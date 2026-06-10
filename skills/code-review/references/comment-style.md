@@ -17,7 +17,7 @@ This calibration matters in both directions:
 1. **Plain words over jargon.** Prefer the ordinary word unless a precise term genuinely carries more meaning. Don't say "materialize the full row," "incurs deserialization overhead," or "hot path" when "loads data we don't use" or "this runs on every request" says it. Keep a real term (`JSONB`, `N+1`, race condition) when it's the accurate name for the thing — just don't pile them up.
 2. **Explain the repo-specific part, not the obvious part.** Point to the existing pattern, helper, or convention the reader can't be expected to know (e.g. "`getArtifactMetadataByClientIds` already does it this way"). Skip explanations of how `Promise.all` or a `for` loop works.
 3. **One thing per comment.** Each finding makes a single point. If you're tempted to write "also," it's probably a second finding.
-4. **Short.** Two or three sentences is plenty. Lead with what's wrong, then why it matters, then (in the recommendation) what to do. The reader shouldn't have to scroll.
+4. **Short — hard cap.** One to two sentences for most findings; three only when a finding genuinely needs setup. Lead with what's wrong, then why it matters, then (in the recommendation) what to do. If you've written a "Separately…" or tacked on a parenthetical second point, cut it or split it into its own finding. Always prefer the shortest version that's still clear.
 5. **State it, don't soften or perform it.** No "heads up," no "just," no exclamation marks, no emoji. Confident and matter-of-fact, not bossy and not chummy. You're a peer leaving a note, not a linter and not a cheerleader.
 6. **Name concrete things.** Reference the actual variables, functions, and files (`status`, `provider`) rather than abstractions ("the relevant fields"). Concreteness is what makes a short comment clear.
 
@@ -32,7 +32,7 @@ Same finding, calibrated three ways:
 > Heads up — this grabs everything from the table, even the big `metadata` blob you don't really need! Just pull the columns you actually use and it'll be a lot faster. 🚀
 
 **On target — plain, explains the repo-specific part:**
-> This selects every column, including the `metadata` JSONB which can be large. The code only reads `status`, `provider`, and `updatedAt` — selecting just those avoids loading data we never use. `getArtifactMetadataByClientIds` already does it this way.
+> This selects every column, including the large `metadata` JSONB, but the code only reads `status`, `provider`, and `updatedAt`. Select just those — `getArtifactMetadataByClientIds` already does it this way.
 
 ---
 
@@ -42,4 +42,4 @@ Another, for a correctness finding:
 > Unguarded array access — `items[0]` will throw on an empty result set upstream of the null check.
 
 **On target:**
-> If `findMatches` returns an empty array, `items[0]` is `undefined` and the `.id` access on the next line throws. This can happen whenever a search has no results. Guard for the empty case before reading the first element.
+> When `findMatches` returns an empty array (any search with no results), `items[0]` is `undefined` and the `.id` access on the next line throws. Guard the empty case before reading the first element.
