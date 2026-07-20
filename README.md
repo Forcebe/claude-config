@@ -6,8 +6,8 @@ Custom [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills. Sym
 
 - **tdd** — Test-driven development with red-green-refactor loop
 - **grill-me** — Interview the user relentlessly about a plan or design until reaching shared understanding
-- **write-a-prd** — Create a PRD through user interview, codebase exploration, and module design
-- **prd-to-issues** — Break a PRD into independently-grabbable Linear issues using vertical slices
+- **to-spec** — Synthesize a spec/PRD from the conversation, codebase exploration, and test-seam design
+- **to-tickets** — Break a spec/PRD into independently-grabbable Linear issues as tracer-bullet vertical slices
 - **improve-codebase-architecture** — Explore a codebase for architectural improvements, focusing on deepening shallow modules
 
 ## Setup
