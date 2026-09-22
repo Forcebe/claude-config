@@ -18,7 +18,7 @@ The `body` field is the top-level review summary that appears above all inline c
 
 Reviewed across architecture, security, correctness, testing, performance, and readability.
 
-**5 warnings, 5 suggestions** — no critical issues.
+**5 warnings, 5 suggestions** — no critical issues. (Add `· 3 cut for length` when the cap trimmed anything.)
 
 ### Key themes
 - The in-memory enrichment pattern works now but will need a DB-layer follow-up as member counts grow
@@ -31,22 +31,24 @@ Reviewed across architecture, security, correctness, testing, performance, and r
 
 ## Inline Comment Tone
 
-Write each comment in the voice defined in [comment-style.md](comment-style.md): plain, short, one point per comment, pitched at a competent engineer new to this repo. Do NOT copy the structured terminal output verbatim — rewrite each finding as flowing prose. An inline comment is already attached to a line, so drop the `file:line` reference and the `**Recommendation:**` label; fold the fix into the same sentences.
+Write each comment in the voice defined in [comment-style.md](comment-style.md): plain, short, one point per comment, pitched at a competent engineer new to this repo. An inline comment is already attached to a line, so drop the `summary`, the `file:line` reference and the `**Fix:**` label — run the `problem` and `fix` together as flowing prose. They're already one or two sentences each, so this is mostly joining them, not rewriting.
+
+The 10-item cap applies here too: post exactly the findings the terminal review showed, so the PR never carries a comment you didn't read. Under `--all`, post everything.
 
 **From this terminal finding:**
 ```
-**[Performance] Repository queries fetch all columns including large JSONB metadata**
-`db/artifacts.ts:42`
-This selects every column, including the `metadata` JSONB which can be large...
-**Recommendation:** Select only `status`, `provider`, and `updatedAt`...
+**3. Query loads a large JSONB nobody reads** [Warning · Performance]
+`db/artifacts.ts:42-47`
+This selects every column, including the large `metadata` JSONB, but the code only reads `status`, `provider` and `updatedAt`.
+**Fix:** Select just those three — `getArtifactMetadataByClientIds` already does it this way.
 ```
 
 **To this inline comment:**
 ```
-This selects every column, including the `metadata` JSONB which can be large. The code only reads `status`, `provider`, and `updatedAt`, so selecting just those avoids loading data we never use. `getArtifactMetadataByClientIds` already does it this way.
+This selects every column, including the large `metadata` JSONB, but the code only reads `status`, `provider` and `updatedAt`. Select just those three — `getArtifactMetadataByClientIds` already does it this way.
 ```
 
-The severity and domain can go in a small tag at the start if helpful (e.g., `*[warning — performance]*`), but the body should read as prose.
+The severity and domain can go in a small tag at the start if helpful (e.g., `*[Warning · Performance]*`), but the body should read as prose.
 
 ## Posting
 

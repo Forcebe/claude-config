@@ -63,9 +63,10 @@ Below the digest, under a `## Findings` heading, one block per finding. Order by
 
 ```markdown
 #### #<id> · <STATUS> · <Critical|Warning|Suggestion> · [<Domain>, <Domain>]
+<summary — one line, the consequence>
 `<file>:<line-start>-<line-end>`
-**Claim:** <what's wrong, one or two sentences>
-**Recommendation:** <what to do>
+**Problem:** <at most two sentences, symptom first then cause>
+**Fix:** <one imperative sentence naming what to change>
 **Snippet (at seed):**
 ​```<lang>
 <the cited code as it stood when the finding was raised>

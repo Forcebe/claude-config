@@ -29,6 +29,7 @@ This skill uses custom subagents defined in `~/.claude/agents/`. The review agen
 - `--draft` — Create a pending GitHub PR review with inline comments instead of terminal output. Requires a PR to exist for the current branch.
 - `--base <branch>` — Override the base branch for diff comparison. Default: auto-detect.
 - `--no-verify` — Skip the verification pass. Every finding is reported as the agents raised it.
+- `--all` — Report every surviving finding instead of the top 10. Applies to terminal and draft output alike.
 
 ## Process
 
@@ -99,7 +100,7 @@ Do this in the main conversation — you have the full picture and can make judg
 - **Warning**: Real issues that should be addressed — design concerns, scalability risks, missing validation, gaps that could bite later — but the feature works correctly as deployed.
 - **Suggestion**: Minor improvements — readability, consistency, small optimizations. Take it or leave it.
 
-1. **Merge overlapping findings**: When multiple agents flag the same code location for related reasons, combine into one finding listing all relevant domains. Keep the highest severity, and keep the most concrete `verification` block of the ones merged — a single well-specified repro beats two vague ones.
+1. **Merge overlapping findings**: When multiple agents flag the same code location for related reasons, combine into one finding listing all relevant domains. Keep the highest severity, the clearest `problem`/`fix` pair, and the most concrete `verification` block of the ones merged — a single well-specified repro beats two vague ones.
 2. **Apply severity definitions**: Re-classify each finding using the definitions above. Agents tend to over-classify — a scalability concern is a warning, not a critical. Be strict.
 3. **Assign stable ids**: Number the surviving findings `#1`, `#2`, … ordered by severity. These ids appear in the output and are what the verifier reports against.
 4. **Build the verification queue**: Every finding whose `verification.falsifiable` is true. If `--no-verify` was passed, or the queue is empty, skip step 5 and treat every finding as `N/A`.
@@ -130,10 +131,10 @@ It returns a verdict per id — `CONFIRMED`, `REFUTED`, `UNVERIFIED` or `N/A` �
    - `REFUTED` — remove it from its severity section and move it to the Refuted block in the output. Never delete it silently.
    - `UNVERIFIED` — keep the finding at its severity, and attach the reason as an `**Unverified:**` line so the human knows it's unproven rather than proven.
    - `N/A` — no annotation. Most architecture and readability findings land here and that's expected; don't mark them as anything.
-2. **Rank by severity**: Criticals first, then warnings, then suggestions.
-3. **Preserve attribution**: Tag each finding with the domain(s) that raised it (e.g., `[Security, Architecture]`).
-4. **Cap suggestions**: Keep at most 5 suggestions — pick the strongest. Criticals and warnings always survive regardless of count. Refuted findings don't count toward the cap.
-5. **Rewrite the prose for voice**: The agents return substance, not polished wording. Rewrite each finding's explanation and recommendation to match [references/comment-style.md](references/comment-style.md) — plain language for a competent engineer new to this repo. This is the step that fixes jargon-heavy, dense agent output; apply it before producing any output. Leave verification evidence alone — it's raw output and its value is being verbatim.
+2. **Rank**: By severity first — criticals, then warnings, then suggestions — and within a severity by blast radius: how much breaks, how many callers, how likely it is to be hit. The result is one ordered list, not three groups.
+3. **Preserve attribution**: Note the domain(s) that raised each finding. It renders alongside the severity, e.g. `[Critical · Security, Architecture]`.
+4. **Apply the cap**: Keep the top 10. **Criticals are exempt** — if twelve things break on deploy, show all twelve. Refuted findings don't count toward the cap. Anything cut is gone: report the count, never the titles. A list of cut titles rebuilds the wall the cap exists to remove. Skip this step entirely under `--all`.
+5. **Check the limits**: The agents now write final-shape prose, so this is a check, not a rewrite. Confirm each `summary` is one line, each `problem` is at most two sentences leading with the symptom, and each `fix` is one imperative sentence naming a concrete thing. Fix any that overrun, and write fresh prose for findings you merged in step 1 — a merged finding has no author. [references/comment-style.md](references/comment-style.md) defines the voice. Leave verification evidence alone: it's raw output and its value is being verbatim.
 6. **Store structured findings**: Retain the structured finding data, including verdicts and evidence, for potential draft PR review posting later in the conversation.
 
 ### 7. Output
@@ -142,20 +143,20 @@ It returns a verdict per id — `CONFIRMED`, `REFUTED`, `UNVERIFIED` or `N/A` �
 
 Produce the formatted review **exactly once** in a single message. Do not emit a preview, partial draft, or example before the final version. Merging, verification and consolidation happen silently — no user-facing text until you write this output.
 
-Every `<explanation>` and `<recommendation>` below must follow [references/comment-style.md](references/comment-style.md): plain, short, and pitched at a competent engineer new to this repo — not the raw agent wording.
+Every `problem` and `fix` below must satisfy [references/comment-style.md](references/comment-style.md): plain, short, pitched at a competent engineer new to this repo.
 
-**Per-finding format** (used inside every severity section):
+**Per-finding format:**
 
 ```
-**#<id> [<Domain>, <Domain>] <title>**
+**<n>. <summary>** [<Severity> · <Domain>, <Domain>]
 `<file>:<line-start>-<line-end>`
-<explanation>
-**Recommendation:** <recommendation>
+<problem>
+**Fix:** <fix>
 **Proven:** <command> → <one-line observation>        (CONFIRMED only)
 **Unverified:** <why it couldn't be checked>          (UNVERIFIED only)
 ```
 
-Findings within a section are separated by a `---` line. A `N/A` finding carries neither extra line — that's the normal state for judgement findings and annotating it would imply something failed.
+Findings are numbered in rank order and separated by a `---` line. A `N/A` finding carries neither verification line — that's the normal state for judgement findings, and annotating it would imply something failed.
 
 Where a `CONFIRMED` finding has a repro test attached, put it under the `**Proven:**` line as a fenced block. It's pasteable straight into the fix, which is most of its value.
 
@@ -171,21 +172,21 @@ Where a `CONFIRMED` finding has a repro test attached, put it under the `**Prove
 - Files changed: <n> | Additions: <n> | Deletions: <n>
 - Verified: <n> confirmed · <n> refuted · <n> unverified   (omit if --no-verify)
 
-### Critical (<count>)
-<all critical findings, in per-finding format, separated by --->
-
-### Warnings (<count>)
-<all warning findings, in per-finding format, separated by --->
-
-### Suggestions (<count>)
-<all suggestions, in per-finding format, separated by --->
+### Findings (<n> shown, <n> cut)
+<all findings, ranked, in per-finding format, separated by --->
 
 ### Refuted by verification (<count>)
-- #<id> "<title>" — <file>:<line>
+- #<id> "<summary>" — <file>:<line>
     → <command> → <what was observed instead>
 ```
 
-Omit any severity section that has zero findings. Omit the Refuted block when nothing was refuted, but never omit it to shorten the output — a refutation that turns out to be wrong is how a real bug disappears, and this block is the only place you'd catch it. If every section is empty, output only:
+Write `<n> shown` alone when nothing was cut. Never list what was cut — the count is the whole disclosure, and you can re-run with `--all`.
+
+Omit the Refuted block when nothing was refuted, but never omit it to shorten the output — a refutation that turns out to be wrong is how a real bug disappears, and this block is the only place you'd catch it.
+
+**Landing under the cap is the good outcome.** Ten is a ceiling, not a target. A diff with three real problems gets three findings; padding it to ten with things that cleared the bar by a whisker trains you to skim, and a skimmed review is worth nothing. If the branch is clean, say so and stop.
+
+If there are no findings at all, output only:
 
 ```
 ### No issues found

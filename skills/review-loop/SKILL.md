@@ -29,7 +29,7 @@ If a thread file already exists for this branch, don't re-seed. Pick up from whe
 
 Run `code-review`'s process steps 1–6, including verification. Reuse its subagents; do not reinvent them.
 
-Serialize the result into the thread file per the format spec, with two differences from `code-review`'s terminal output: skip the comment-style voice rewrite (the reader is an agent checking against code, not a human skimming), and apply no suggestion cap. Capture a seed snippet and, where the verifier produced one, the verification verdict and its evidence.
+Serialize the result into the thread file per the format spec, with one difference from `code-review`'s terminal output: apply no cap. The top-10 cut exists because a human is reading a terminal; here the reader is an agent working findings one at a time, and a cut finding never gets answered. Keep everything that cleared the bar. Capture a seed snippet and, where the verifier produced one, the verification verdict and its evidence.
 
 If the review produced zero findings, write nothing, report that the branch is clean, and stop.
 
@@ -56,7 +56,7 @@ Queue every finding you marked `ADDRESSED` that carried a falsifiable check at s
 ```
 Use the Agent tool with:
   subagent_type: cr-verify
-  prompt: <for each ADDRESSED finding: id, file:line, the original claim,
+  prompt: <for each ADDRESSED finding: id, file:line, the original problem,
            the verification block, and the command it ran at seed>
 ```
 
@@ -70,7 +70,7 @@ Spawn `cr-adjudicate`, fresh, with everything it needs to rule without trusting 
 Use the Agent tool with:
   subagent_type: cr-adjudicate
   prompt: <for each ADDRESSED/DISPUTED/STALE finding: id, severity, domains,
-           file:line, the claim, the recommendation, the seed snippet, your
+           file:line, the problem, the fix, the seed snippet, your
            disposition and note, and the re-verification verdict if there is one>
 ```
 
