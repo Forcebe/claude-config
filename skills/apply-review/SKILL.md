@@ -1,6 +1,6 @@
 ---
 name: apply-review
-description: Writer side of the self-review loop. Reads the review thread on the current branch, verifies each open finding against the current code, then fixes it / disputes it with a reason / marks it stale, runs validation, and updates the thread. Use when asked to "apply the review", "pick up the handoff", "respond to the review findings", "address the review thread", or "fix the review".
+description: Writer side of the self-review loop. Reads the review thread on the current branch, verifies each open finding against the current code, then fixes it / disputes it with a reason / marks it stale, runs validation, and updates the thread. Use when asked to "apply the review", "pick up the handoff", "respond to the review findings", "address the review thread", or "fix the review". Do NOT use to produce the review in the first place — use self-review or code-review. Do NOT use to drive the whole negotiation — use review-loop.
 ---
 
 # Apply Review (writer side)
@@ -24,7 +24,7 @@ This is one writer turn: respond to every finding that's currently your move, va
 
    On a `HELD` finding, weigh the reviewer's rebuttal specifically — either fix it or escalate, don't just re-assert your first reason.
 
-5. **Validate.** After fixes, run the repo's checks — typecheck, lint, and the tests covering the touched files (use the project's own commands; invoke the `verify` skill if running the app is the only real proof). Report pass/fail with the actual output. Don't claim validation you didn't run.
+5. **Validate.** After fixes, run the repo's checks — typecheck, lint, and the tests covering the touched files (use the project's own commands; invoke the `run` skill if running the app is the only real proof). Report pass/fail with the actual output. Don't claim validation you didn't run.
 
 6. **Update the thread.** Append your disposition to each finding's thread, set the new statuses, bump the turn number, and regenerate the digest exactly per the spec.
 

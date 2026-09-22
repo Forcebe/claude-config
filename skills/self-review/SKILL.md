@@ -1,6 +1,6 @@
 ---
 name: self-review
-description: Reviewer side of a writer↔reviewer self-review loop on your own branch. Seeds a stateful review thread from a multi-agent review, and later adjudicates the writer's responses (accepting fixes/pushback or rebutting further). Use ONLY when explicitly asked to "self-review", "start a review thread", "seed a review thread", "adjudicate the responses", or "continue the review thread". Do NOT use for one-shot reviews or reviewing other people's PRs — use code-review for those.
+description: Reviewer side of a writer↔reviewer self-review loop on your own branch. Seeds a stateful review thread from a multi-agent review, and later adjudicates the writer's responses (accepting fixes/pushback or rebutting further). Use ONLY when explicitly asked to "self-review", "start a review thread", "seed a review thread", "adjudicate the responses", or "continue the review thread". Do NOT use for one-shot reviews or reviewing other people's PRs — use code-review. Do NOT use to run the negotiation automatically — use review-loop.
 ---
 
 # Self-Review (reviewer side)
@@ -20,12 +20,14 @@ This skill has two modes — **seed** (round 1) and **adjudicate** (every later 
 
 Produce the same analysis as the `code-review` skill, then serialize it into the thread instead of printing a terminal review.
 
-1. **Run the review engine.** Follow `code-review`'s process steps 1–4 (Gather Context → Explore → 6 parallel `cr-review-*` agents → Consolidate), including its severity definitions. Reuse the same `cr-explore` and `cr-review-*` subagents; do not reinvent them.
+1. **Run the review engine.** Follow `code-review`'s process steps 1–6 (Gather Context → Explore → 6 parallel `cr-review-*` agents → Merge and Queue → Verify → Consolidate), including its severity definitions. Reuse the same `cr-explore`, `cr-review-*` and `cr-verify` subagents; do not reinvent them.
+
+   Verification changes what reaches the thread: findings the verifier **refuted** never become findings the writer has to answer, and a **confirmed** finding carries its evidence — the command and what it showed — into the thread, which is far harder to dispute than a claim.
 2. **Serialize, don't prettify.** Two deliberate differences from `code-review`'s terminal output:
    - **Skip the comment-style voice rewrite.** The reader is an agent verifying against code, not a human skimming prose. Keep findings terse and concrete.
    - **No suggestion cap.** Keep every finding — the writer skips stale ones itself, and dropping the weakest loses signal. (Still rank by severity.)
 3. **Capture a seed snippet** for every finding: the exact cited code as it stands now. This is what the writer checks staleness against.
-4. **Assign stable ids** (`#1`, `#2`, …) and set every finding `OPEN`.
+4. **Set every finding `OPEN`**, keeping the ids assigned during Merge and Queue so the thread and the verifier's evidence refer to the same numbers.
 5. **Write the thread file** per the format spec, then generate the digest (turn 1, reviewer seed).
 6. **Protect it from git.** Per the spec's Lifecycle section, ensure `.claude/reviews/.gitignore` exists containing `*` so the thread never reaches GitHub. Create it if missing; never stage anything under `.claude/reviews/`.
 

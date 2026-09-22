@@ -28,6 +28,7 @@ Follow data flow from user input through the changed code. Read auth middleware 
 - If you have nothing meaningful to report, return an empty findings array — this is a valid and good outcome
 - Do not re-raise issues mentioned in existing PR review comments
 - Focus on issues introduced or affected by the diff, not pre-existing problems
+- Add a `verification` block to every finding, saying whether the claim can be settled by running something. `falsifiable: true` demands a concrete `repro` — a specific test case, or an HTTP method plus path and body — and an `expected` observation. "Run the test suite" is not a repro; if you cannot say exactly what to run and what it would show, set `falsifiable: false` with `method: none`. A vulnerability is falsifiable only when it is exploitable against the local dev server as it stands; a hardening gap is not.
 
 ## Output
 
@@ -44,7 +45,13 @@ Respond with ONLY this JSON, no other text:
       "line": 45,
       "end_line": 52,
       "explanation": "What the issue is and why it matters",
-      "recommendation": "What should be done instead"
+      "recommendation": "What should be done instead",
+      "verification": {
+        "falsifiable": true,
+        "method": "test | api | none",
+        "repro": "Exactly what to run to make the claimed behaviour happen",
+        "expected": "What the verifier will observe if this finding is real"
+      }
     }
   ]
 }
