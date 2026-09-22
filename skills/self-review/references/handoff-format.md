@@ -1,6 +1,6 @@
 # Self-Review Handoff Format
 
-The shared contract for the writer↔reviewer negotiation loop. `self-review` seeds and adjudicates this file; `apply-review` responds to it. Both skills read this spec so the format never drifts.
+The shared contract for the writer↔reviewer negotiation loop. `self-review` seeds and adjudicates this file; `apply-review` responds to it; `review-loop` plays both sides automatically in the chat that wrote the code. All three read this spec so the format never drifts.
 
 ## Location
 
@@ -17,7 +17,7 @@ These threads are local working artifacts. They must never be committed or pushe
 
 ## Design goal: resist the lazy approval
 
-The human triggers every turn and is the final approver, so the file's top section is the only part they're guaranteed to read. Build it to stop a reflexive "LGTM" on something not actually understood:
+The human is the final approver — and under `review-loop` they may not see a single turn before the report, which makes the top section the only part they're guaranteed to read. Build it to stop a reflexive "LGTM" on something not actually understood:
 
 - **Lead with what needs a decision.** Unresolved conflicts and escalations go at the very top, never buried under resolved noise.
 - **Render every conflict as two short claims, side by side** — writer says X, reviewer says Y. The human adjudicates a stated disagreement, never rubber-stamps prose.
@@ -70,6 +70,8 @@ Below the digest, under a `## Findings` heading, one block per finding. Order by
 ​```<lang>
 <the cited code as it stood when the finding was raised>
 ​```
+**Verified:** <CONFIRMED|REFUTED|UNVERIFIED|N/A> — <the command run> → <what it showed>
+(omit the line entirely for N/A; a refuted finding never reaches the thread at all)
 **Thread:**
 - turn 1 · reviewer · seed — raised
 - turn 2 · writer · <FIXED|DISPUTE|STALE> — <note>
@@ -98,9 +100,21 @@ OPEN ──writer fixes──▶ ADDRESSED ──reviewer──▶ RESOLVED ✓
 | `ACCEPTED` ✓ | reviewer | Reviewer drops the finding (writer's pushback stands) — terminal |
 | `REOPENED` | reviewer | Fix or stale-claim rejected, back to writer |
 | `HELD` | reviewer | Reviewer holds the finding with a rebuttal, back to writer |
-| `DEADLOCKED` / `NEEDS-HUMAN` | either | Escalated to the human — terminal until the human rules |
+| `DEADLOCKED` | either | Two DISPUTED↔HELD rounds without convergence — terminal until the human rules |
+| `NEEDS-HUMAN` | either, at any time | Escalated because the answer isn't in the code — terminal until the human rules |
 
 Terminal: `RESOLVED`, `ACCEPTED`, confirmed-`STALE`. A finding is "done" only in a terminal state or after a human ruling.
+
+## Escalating to the human
+
+`NEEDS-HUMAN` is not only what a deadlock decays into. Either side may play it at any point in any turn, without finishing the turn first, when:
+
+- The right answer depends on intended product behaviour neither side can infer from the code.
+- The fix requires a decision with consequences beyond this branch — a schema change, an API contract, a new dependency.
+- A finding exposes a problem larger than itself, where fixing what was flagged would paper over it.
+- The fix would be irreversible, or would touch data.
+
+Record it with a one-line question the human can answer without opening the file, and surface it in the digest's `Needs your decision` section. Escalating early on a genuine unknown is cheaper than two confident rounds followed by a deadlock on the same question.
 
 ## Deadlock cap
 
@@ -114,9 +128,9 @@ For each `OPEN`/`REOPENED`/`HELD` finding, the writer picks exactly one, re-read
 - **DISPUTE** — disagrees, with a concrete reason → `DISPUTED`.
 - **STALE** — code no longer matches the seed snippet and the issue is gone → `STALE`. Note what changed it.
 
-## Reviewer adjudications (self-review, adjudicate mode)
+## Reviewer adjudications
 
-For each `ADDRESSED`/`DISPUTED`/`STALE` finding, re-read the current code and rule:
+Made by `self-review` in adjudicate mode, or by the `cr-adjudicate` agent under `review-loop`. For each `ADDRESSED`/`DISPUTED`/`STALE` finding, re-read the current code and rule:
 
 - On `ADDRESSED`: `RESOLVED` if the fix holds, else `REOPENED` with what's still wrong.
 - On `DISPUTED`: `ACCEPTED` if the pushback is reasonable, else `HELD` with a rebuttal.
@@ -125,4 +139,4 @@ For each `ADDRESSED`/`DISPUTED`/`STALE` finding, re-read the current code and ru
 
 ## Approval
 
-No move marks the review complete — only the human does. Adjudicate/apply moves must **refuse to declare the thread done** while any finding is non-terminal or `DEADLOCKED`/`NEEDS-HUMAN`. To close out an escalated finding the human types a verdict per item (e.g. "accept #4's pushback", "hold #1, writer must fix"); the next reviewer turn records it as `ACCEPTED`/`REOPENED` accordingly.
+No move marks the review complete — only the human does. This holds under `review-loop` too: the loop may take every turn itself, but it finishes by reporting, never by approving. Adjudicate/apply moves must **refuse to declare the thread done** while any finding is non-terminal or `DEADLOCKED`/`NEEDS-HUMAN`. To close out an escalated finding the human types a verdict per item (e.g. "accept #4's pushback", "hold #1, writer must fix"); the next reviewer turn records it as `ACCEPTED`/`REOPENED` accordingly.
