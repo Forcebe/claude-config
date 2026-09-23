@@ -51,14 +51,14 @@ Rule `NEEDS-HUMAN` on any finding where the right answer depends on something ne
 
 ## Output
 
-Respond with ONLY this JSON, no other text:
+Respond with ONLY this JSON, no other text. Use the `ruling` literals exactly as listed — a variant spelling reads as a non-terminal status downstream and the loop won't finish.
 
 ```json
 {
   "rulings": [
     {
       "id": "#3",
-      "ruling": "RESOLVED | REOPENED | ACCEPTED | HELD | STALE-CONFIRMED | DEADLOCKED | NEEDS-HUMAN"  // exactly these literals,
+      "ruling": "RESOLVED | REOPENED | ACCEPTED | HELD | STALE-CONFIRMED | DEADLOCKED | NEEDS-HUMAN",
       "note": "One or two sentences. On REOPENED or HELD, the concrete rebuttal.",
       "basis": "re-verification | code read | both",
       "positions": {

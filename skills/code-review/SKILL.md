@@ -40,14 +40,15 @@ This skill uses custom subagents defined in `~/.claude/agents/`. The review agen
 Do this in the main conversation — it needs access to MCP tools (Linear) and is fast enough to run inline.
 
 **Detect review target:**
-1. Check for a PR: `gh pr view --json number,title,body,baseRefName,headRefName,url,reviews,comments 2>/dev/null`
+1. **If the user named a PR** (a number or URL), resolve that one directly: `gh pr view <number> --json number,title,body,baseRefName,headRefName,url,reviews,comments`. Compare its `headRefName` against `git branch --show-current`.
 
-   This resolves the PR for the **current branch**. To review someone else's PR, check it out first (`gh pr checkout <number>`) — the review agents and `cr-verify` both read the working tree, so reviewing a branch you haven't checked out silently reviews the wrong code. If the user names a PR that isn't checked out, say so and ask before checking it out; it changes their working directory.
-2. If PR exists: use the PR's base branch and diff
-3. If no PR: diff the current branch against the auto-detected base branch
-4. Base branch detection: check for `develop` first, fall back to `main`, then `master`. Respect `--base` override if provided.
-5. Get the diff: `git diff <base>...HEAD` (for branch) or `gh pr diff` (for PR)
-6. Get diff stats: `git diff <base>...HEAD --stat`
+   If they differ, the PR isn't checked out. Say so and ask before running `gh pr checkout <number>` — it changes the user's working directory, and it may fail or discard work if their tree is dirty. Don't proceed without it: the review agents and `cr-verify` both read the working tree, so reviewing a branch that isn't checked out silently reviews whatever is there instead.
+2. **Otherwise**, resolve the PR for the current branch: `gh pr view --json number,title,body,baseRefName,headRefName,url,reviews,comments 2>/dev/null`
+3. If a PR was found: use its base branch and diff
+4. If no PR: diff the current branch against the auto-detected base branch
+5. Base branch detection: check for `develop` first, fall back to `main`, then `master`. Respect `--base` override if provided.
+6. Get the diff: `git diff <base>...HEAD` (for branch) or `gh pr diff` (for PR)
+7. Get diff stats: `git diff <base>...HEAD --stat`
 
 **Fetch external context (skip gracefully if unavailable):**
 

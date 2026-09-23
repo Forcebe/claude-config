@@ -6,7 +6,9 @@ The shared contract for the writer↔reviewer negotiation loop. `self-review` se
 
 One file per branch: `.claude/reviews/<branch>.md`. Replace `/` in the branch name with `-` (e.g. `feat/PROJ-123` → `.claude/reviews/feat-PROJ-123.md`). Create the `.claude/reviews/` directory if it doesn't exist.
 
-That replacement isn't reversible — `feat/PROJ-123` and `feat-PROJ-123` produce the same filename. The digest header records the real branch name, so check it: if the file already exists and its header names a different branch, the names collided. Append the first 7 characters of `git rev-parse --short=7 HEAD` to the filename (`feat-PROJ-123.a1b2c3d.md`) and use that instead. Don't write over a thread belonging to another branch.
+That replacement isn't reversible — `feat/PROJ-123` and `feat-PROJ-123` produce the same filename. The digest header records the real branch name, so check it before writing: if the file exists and its header names a different branch, the names collided.
+
+On a collision, use `<base>.<suffix>.md`, where the suffix is the first 7 characters of a hash of the **full branch name**: `printf '%s' "$branch" | shasum | cut -c1-7`. Derive it from the branch, never from the current commit — a commit-derived suffix changes as soon as you commit, so the thread you wrote this morning is unreachable this afternoon. Because a branch always hashes to the same suffix, the same branch always resolves to the same file; check that file's header too, and never write over a thread whose header names another branch.
 
 ## Lifecycle & cleanup
 
@@ -137,7 +139,7 @@ Made by `self-review` in adjudicate mode, or by the `cr-adjudicate` agent under 
 
 - On `ADDRESSED`: `RESOLVED` if the fix holds, else `REOPENED` with what's still wrong.
 - On `DISPUTED`: `ACCEPTED` if the pushback is reasonable, else `HELD` with a rebuttal.
-- On `STALE`: `STALE-CONFIRMED` (terminal) if the code genuinely moved, else `REOPENED`.
+- On `STALE`: `STALE-CONFIRMED` (terminal) only when the code genuinely moved **and** the defect went with it. If the issue survives — including at a new line or in a different file — rule `REOPENED` and say where it lives now. A snippet that no longer matches proves the code changed, not that the problem is gone.
 - Apply the [deadlock cap](#deadlock-cap).
 
 ## Approval
