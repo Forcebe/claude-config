@@ -52,8 +52,12 @@ Do this in the main conversation — it needs access to MCP tools (Linear) and i
 3. If a PR was found: use its base branch and diff
 4. If no PR: diff the current branch against the auto-detected base branch
 5. Base branch detection: check for `develop` first, fall back to `main`, then `master`. Respect `--base` override if provided.
-6. Get the diff: `gh pr diff` only when a PR was found **and** its snapshot matched the working tree. Otherwise `git diff <base>...HEAD`. The diff and the agents must describe the same code — a finding refuted against code the reviewer never read is worse than no verification at all.
-7. Get diff stats: `git diff <base>...HEAD --stat`
+6. Get the diff. Everything downstream — the stats, and the file list `cr-explore` and the reviewers receive — must come from this one source, because the diff and the agents have to describe the same code. A finding refuted against code the reviewer never read is worse than no verification at all.
+
+   - **PR found and its snapshot matched:** `gh pr diff`.
+   - **Otherwise:** `BASE=$(git merge-base <base> HEAD)`, then `git diff $BASE`. Two dots against the working tree, not `git diff <base>...HEAD` — the three-dot form shows committed changes only, which omits exactly the uncommitted work you fell back to review.
+   - **Untracked files appear in no `git diff`.** List them with `git ls-files --others --exclude-standard` and treat each as an addition. If there are more than a handful, they're usually scaffolding rather than part of the change: name them in the Context block and include only the ones the change actually touches.
+7. Get diff stats from that same source: `gh pr diff --patch | diffstat`-style counts, or `git diff $BASE --stat` plus the untracked additions.
 
 **Fetch external context (skip gracefully if unavailable):**
 
