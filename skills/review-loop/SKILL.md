@@ -76,7 +76,7 @@ Use the Agent tool with:
            disposition and note, and the re-verification verdict if there is one>
 ```
 
-Apply its rulings to the thread, append each to the finding's thread, bump the turn number, and regenerate the digest. Add any `new_findings` it returned as fresh `OPEN` findings with new ids.
+Apply its rulings to the thread, append each to the finding's thread, bump the turn number, and regenerate the digest. Add any `new_findings` it returned as fresh `OPEN` findings with new ids, capturing a seed snippet from the cited `file`/`line` as you would at seed — a finding without one can't be checked for staleness later.
 
 ## Loop control
 

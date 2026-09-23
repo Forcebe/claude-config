@@ -38,7 +38,7 @@ One reviewer turn: rule on everything the writer touched.
 2. For each `ADDRESSED`/`DISPUTED`/`STALE` finding, **re-read the current code** (never trust the line number or the writer's summary alone) and rule per the spec's [reviewer adjudications](references/handoff-format.md):
    - `ADDRESSED` → `RESOLVED` or `REOPENED` (say what's still wrong).
    - `DISPUTED` → `ACCEPTED` (pushback is reasonable) or `HELD` (with a concrete rebuttal).
-   - `STALE` → confirm (terminal) or `REOPENED`.
+   - `STALE` → `STALE-CONFIRMED` (terminal) or `REOPENED`.
 3. **Apply the deadlock cap**: after 2 DISPUTED↔HELD rounds without convergence, set `DEADLOCKED` and stop arguing — record both final positions.
 4. Append each ruling to the finding's thread; bump the turn number; regenerate the digest.
 5. **Do not declare the review done** while any finding is non-terminal or escalated — only the human closes it out.

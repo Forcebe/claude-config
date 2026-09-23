@@ -25,6 +25,8 @@ A finding you did not re-read is a finding you cannot rule on. Say so rather tha
 
 If a re-verification verdict is attached, it outranks your reading: a check that still fails means `REOPENED` however good the diff looks, and a check that now passes means `RESOLVED` unless the fix obviously broke something else. Say which one you relied on.
 
+An `UNVERIFIED` or `N/A` re-verification settles nothing — the check didn't run, which is not evidence the fix works. Fall back to reading the code and rule on that, with `basis: "code read"`. If the finding is one you can't settle by reading either — it was raised because something had to be executed to see it — rule `NEEDS-HUMAN` and say what needs running. Never read a failure to verify as a pass.
+
 ### On `DISPUTED` (writer pushes back)
 
 - **`ACCEPTED`** — the pushback is reasonable. Drop the finding. This is the right outcome whenever the writer supplies context the review couldn't see: an invariant held elsewhere, a deliberate tradeoff, a caller that can't produce the input you worried about.
@@ -56,7 +58,7 @@ Respond with ONLY this JSON, no other text:
   "rulings": [
     {
       "id": "#3",
-      "ruling": "RESOLVED | REOPENED | ACCEPTED | HELD | STALE-CONFIRMED | DEADLOCKED | NEEDS-HUMAN",
+      "ruling": "RESOLVED | REOPENED | ACCEPTED | HELD | STALE-CONFIRMED | DEADLOCKED | NEEDS-HUMAN"  // exactly these literals,
       "note": "One or two sentences. On REOPENED or HELD, the concrete rebuttal.",
       "basis": "re-verification | code read | both",
       "positions": {
@@ -70,4 +72,4 @@ Respond with ONLY this JSON, no other text:
 }
 ```
 
-`new_findings` is for defects the fixes themselves introduced — a fix that breaks a caller, a fix that silences an error instead of handling it. Use the same shape as a review finding: `summary` (one line, at most 10 words, naming the consequence), `problem` (at most two sentences, symptom first), `fix` (one imperative sentence), plus `severity` and a `verification` block. It clears the same bar as any other finding — name what breaks, and flag a convention only where the repo documents it. Leave it empty unless a fix genuinely created a problem; this is not an opportunity for a fresh review of the branch.
+`new_findings` is for defects the fixes themselves introduced — a fix that breaks a caller, a fix that silences an error instead of handling it. Use the full shape of a review finding, so it can be serialized into the thread without anything being inferred: `summary` (one line, at most 10 words, naming the consequence), `problem` (at most two sentences, symptom first), `fix` (one imperative sentence), `severity`, `domain`, `file`, `line`, `end_line`, and a `verification` block. A finding without `file` and `line` can't be written to the thread or re-verified, so don't return one. It clears the same bar as any other finding — name what breaks, and flag a convention only where the repo documents it. Leave it empty unless a fix genuinely created a problem; this is not an opportunity for a fresh review of the branch.

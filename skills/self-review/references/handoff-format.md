@@ -6,6 +6,8 @@ The shared contract for the writer↔reviewer negotiation loop. `self-review` se
 
 One file per branch: `.claude/reviews/<branch>.md`. Replace `/` in the branch name with `-` (e.g. `feat/PROJ-123` → `.claude/reviews/feat-PROJ-123.md`). Create the `.claude/reviews/` directory if it doesn't exist.
 
+That replacement isn't reversible — `feat/PROJ-123` and `feat-PROJ-123` produce the same filename. The digest header records the real branch name, so check it: if the file already exists and its header names a different branch, the names collided. Append the first 7 characters of `git rev-parse --short=7 HEAD` to the filename (`feat-PROJ-123.a1b2c3d.md`) and use that instead. Don't write over a thread belonging to another branch.
+
 ## Lifecycle & cleanup
 
 These threads are local working artifacts. They must never be committed or pushed.
@@ -76,7 +78,7 @@ Below the digest, under a `## Findings` heading, one block per finding. Order by
 **Thread:**
 - turn 1 · reviewer · seed — raised
 - turn 2 · writer · <FIXED|DISPUTE|STALE> — <note>
-- turn 3 · reviewer · <RESOLVED|REOPENED|ACCEPTED|HELD|confirm-stale> — <note>
+- turn 3 · reviewer · <RESOLVED|REOPENED|ACCEPTED|HELD|STALE-CONFIRMED> — <note>
 ```
 
 The seed snippet is load-bearing: `apply-review` checks the current code against it to detect staleness, and the reviewer uses it to judge whether a "stale" claim is honest.
@@ -88,7 +90,7 @@ OPEN ──writer fixes──▶ ADDRESSED ──reviewer──▶ RESOLVED ✓
   │                                    └──────▶ REOPENED ──(back to writer)
   ├──writer disputes──▶ DISPUTED ──reviewer──▶ ACCEPTED ✓   (reviewer drops it)
   │                                    └──────▶ HELD + rebuttal ──(back to writer)
-  └──writer: stale────▶ STALE ──────reviewer──▶ confirmed ✓ / REOPENED
+  └──writer: stale────▶ STALE ──────reviewer──▶ STALE-CONFIRMED ✓ / REOPENED
 ```
 
 | Status | Set by | Meaning |
@@ -104,7 +106,7 @@ OPEN ──writer fixes──▶ ADDRESSED ──reviewer──▶ RESOLVED ✓
 | `DEADLOCKED` | either | Two DISPUTED↔HELD rounds without convergence — terminal until the human rules |
 | `NEEDS-HUMAN` | either, at any time | Escalated because the answer isn't in the code — terminal until the human rules |
 
-Terminal: `RESOLVED`, `ACCEPTED`, confirmed-`STALE`. A finding is "done" only in a terminal state or after a human ruling.
+Terminal: `RESOLVED`, `ACCEPTED`, `STALE-CONFIRMED`. Those three literals exactly — a turn deciding whether the thread is finished compares against them, so a variant spelling reads as still-open. A finding is "done" only in a terminal state or after a human ruling.
 
 ## Escalating to the human
 
@@ -135,7 +137,7 @@ Made by `self-review` in adjudicate mode, or by the `cr-adjudicate` agent under 
 
 - On `ADDRESSED`: `RESOLVED` if the fix holds, else `REOPENED` with what's still wrong.
 - On `DISPUTED`: `ACCEPTED` if the pushback is reasonable, else `HELD` with a rebuttal.
-- On `STALE`: confirm (terminal) if the code genuinely moved, else `REOPENED`.
+- On `STALE`: `STALE-CONFIRMED` (terminal) if the code genuinely moved, else `REOPENED`.
 - Apply the [deadlock cap](#deadlock-cap).
 
 ## Approval
