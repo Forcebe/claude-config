@@ -66,7 +66,7 @@ The `Needs your decision` section appears for findings in `DEADLOCKED`/`NEEDS-HU
 Below the digest, under a `## Findings` heading, one block per finding. Order by id. The header line carries the mutable state; the thread records history.
 
 ```markdown
-#### #<id> · <STATUS> · <Critical|Warning|Suggestion> · [<Domain>, <Domain>]
+#### #<id> · <STATUS> · <P0-P4> · <Critical|Warning|Suggestion> · [<Domain>, <Domain>]
 <summary — one line, the consequence>
 `<file>:<line-start>-<line-end>`
 **Problem:** <at most two sentences, symptom first then cause>

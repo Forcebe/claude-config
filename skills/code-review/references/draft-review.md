@@ -37,7 +37,7 @@ The 10-item cap applies here too: post exactly the findings the terminal review 
 
 **From this terminal finding:**
 ```
-**3. Query loads a large JSONB nobody reads** [Warning · Performance]
+**3. Query loads a large JSONB nobody reads** [P3 · Warning · Performance]
 `db/artifacts.ts:42-47`
 This selects every column, including the large `metadata` JSONB, but the code only reads `status`, `provider` and `updatedAt`.
 **Fix:** Select just those three — `getArtifactMetadataByClientIds` already does it this way.
@@ -48,7 +48,7 @@ This selects every column, including the large `metadata` JSONB, but the code on
 This selects every column, including the large `metadata` JSONB, but the code only reads `status`, `provider` and `updatedAt`. Select just those three — `getArtifactMetadataByClientIds` already does it this way.
 ```
 
-The severity and domain can go in a small tag at the start if helpful (e.g., `*[Warning · Performance]*`), but the body should read as prose.
+The tier, severity and domain can go in a small tag at the start if helpful (e.g., `*[P3 · Warning · Performance]*`), but the body should read as prose.
 
 ## Posting
 

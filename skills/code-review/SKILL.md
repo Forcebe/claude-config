@@ -105,10 +105,29 @@ Do this in the main conversation — you have the full picture and can make judg
 - **Warning**: Real issues that should be addressed — design concerns, scalability risks, missing validation, gaps that could bite later — but the feature works correctly as deployed.
 - **Suggestion**: Minor improvements — readability, consistency, small optimizations. Take it or leave it.
 
+**Priority tier — a second label, from the team's shared punch-list vocabulary:**
+
+| Tier | Meaning |
+|------|---------|
+| `P0` | Correctness, data loss or security. Wrong behaviour shipped, missing auth, a crash on the golden path. |
+| `P1` | Functional bugs in edge cases. Wrong error handling, recoverable-but-broken UX, a type cast hiding a wrong type. |
+| `P2` | A documented project convention violated — one the repo actually states, not a preference. |
+| `P3` | Wasteful but working. N+1 queries, over-broad invalidation, unnecessary re-renders. |
+| `P4` | Polish. Duplicate copy, naming, a missing note on a non-obvious pattern. |
+
+Severity and tier measure different things — consequence versus kind — so they can disagree. **Severity wins.** Apply these floors after picking the tier from the table:
+
+- A `Critical` finding is always `P0`, whatever its kind. An N+1 that times out on today's data breaks on deploy; it is not a P3.
+- A `Suggestion` is never above `P3`.
+- A `Warning` sits wherever the table puts it, `P1` to `P3`.
+
+If applying a floor moves a finding, the tier was wrong, not the severity.
+
 1. **Merge overlapping findings**: When multiple agents flag the same code location for related reasons, combine into one finding listing all relevant domains. Keep the highest severity, the clearest `problem`/`fix` pair, and the most concrete `verification` block of the ones merged — a single well-specified repro beats two vague ones.
 2. **Apply severity definitions**: Re-classify each finding using the definitions above. Agents tend to over-classify — a scalability concern is a warning, not a critical. Be strict.
-3. **Assign stable ids**: Number the surviving findings `#1`, `#2`, … ordered by severity. These ids appear in the output and are what the verifier reports against.
-4. **Build the verification queue**: Every finding whose `verification.falsifiable` is true. If `--no-verify` was passed, or the queue is empty, skip step 5 and treat every finding as `N/A`.
+3. **Assign a priority tier**: Pick it from the table, then apply the floors. Merged findings take the strongest tier of the ones merged.
+4. **Assign stable ids**: Number the surviving findings `#1`, `#2`, … ordered by tier. These ids appear in the output and are what the verifier reports against.
+5. **Build the verification queue**: Every finding whose `verification.falsifiable` is true. If `--no-verify` was passed, or the queue is empty, skip the Verify step and treat every finding as `N/A`.
 
 Do not rank, cap, or rewrite prose yet — verification may still remove findings, and polishing something that's about to be refuted is wasted work.
 
@@ -136,8 +155,8 @@ It returns a verdict per id — `CONFIRMED`, `REFUTED`, `UNVERIFIED` or `N/A` �
    - `REFUTED` — remove it from its severity section and move it to the Refuted block in the output. Never delete it silently.
    - `UNVERIFIED` — keep the finding at its severity, and attach the reason as an `**Unverified:**` line so the human knows it's unproven rather than proven.
    - `N/A` — no annotation. Most architecture and readability findings land here and that's expected; don't mark them as anything.
-2. **Rank**: By severity first — criticals, then warnings, then suggestions — and within a severity by blast radius: how much breaks, how many callers, how likely it is to be hit. The result is one ordered list, not three groups.
-3. **Preserve attribution**: Note the domain(s) that raised each finding. It renders alongside the severity, e.g. `[Critical · Security, Architecture]`.
+2. **Rank**: By priority tier, `P0` first, and within a tier by blast radius: how much breaks, how many callers, how likely it is to be hit. The floors mean this also orders by severity, so one ordered list falls out — not three groups.
+3. **Preserve attribution**: Note the domain(s) that raised each finding. It renders after the tier and severity, e.g. `[P0 · Critical · Security, Architecture]`.
 4. **Apply the cap**: Keep the top 10. **Criticals are exempt** — if twelve things break on deploy, show all twelve. Refuted findings don't count toward the cap. Anything cut is gone: report the count, never the titles. A list of cut titles rebuilds the wall the cap exists to remove. Skip this step entirely under `--all`.
 5. **Check the limits**: The agents now write final-shape prose, so this is a check, not a rewrite. Confirm each `summary` is one line, each `problem` is at most two sentences leading with the symptom, and each `fix` is one imperative sentence naming a concrete thing. Fix any that overrun, and write fresh prose for findings you merged in step 1 — a merged finding has no author. [references/comment-style.md](references/comment-style.md) defines the voice. Leave verification evidence alone: it's raw output and its value is being verbatim.
 6. **Store structured findings**: Retain the structured finding data, including verdicts and evidence, for potential draft PR review posting later in the conversation.
@@ -153,7 +172,7 @@ Every `problem` and `fix` below must satisfy [references/comment-style.md](refer
 **Per-finding format:**
 
 ```
-**<n>. <summary>** [<Severity> · <Domain>, <Domain>]
+**<n>. <summary>** [<P-tier> · <Severity> · <Domain>, <Domain>]
 `<file>:<line-start>-<line-end>`
 <problem>
 **Fix:** <fix>
