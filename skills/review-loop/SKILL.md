@@ -1,11 +1,13 @@
 ---
 name: review-loop
-description: Runs the writer↔reviewer review negotiation automatically, in the chat that wrote the code — seeds a verified review, responds to every finding, has fresh agents adjudicate the responses, and reports what changed. Use when asked to "run the review loop", "review and fix", "auto-review", "review this branch and address it", or to review and act on findings without driving each turn by hand. Do NOT use in a fresh chat with no implementation context — use self-review. Do NOT use for a review with no fixes — use code-review.
+description: Reviews and fixes your own work once it is finished, in the chat that wrote it. Seeds a verified review, answers every finding as the author, has fresh agents adjudicate those answers, and reports what changed. Use when the user has finished a piece of work and wants it checked before committing — "review my work", "review and fix", "I'm done, check this", "run the review loop", "review this branch and address it". It needs the implementation context, so it only works in the session that did the work. Do NOT use on code someone else wrote, or from a fresh chat — use code-review or self-review for those.
 ---
 
 # Review Loop
 
-The writer↔reviewer negotiation, driven end to end without the human taking a turn.
+Your own work, reviewed and fixed before you commit it.
+
+**Run this when the work is finished**, not partway through. The loop reviews the whole diff, argues out what it finds, and leaves you a report — all of which is wasted on code you're still changing, and a finding raised against a half-built function is noise rather than signal.
 
 **This chat is the writer.** Run it where the code was written, because the writer's real job is informed pushback — "that input can't reach this function, the caller validates it" — and that argument only exists where the context does. The reviewing is done by fresh subagents that have never seen this conversation, so the review stays unbiased while the writer stays informed.
 

@@ -1,9 +1,11 @@
 ---
 name: code-review
-description: Comprehensive multi-agent code review that spawns parallel specialist agents (architecture, security, correctness, testing, performance, readability), proves or refutes their falsifiable findings by running tests and API calls, and consolidates what survives into a prioritized review. Use when the user asks to "review my code", "review my branch", "review this PR", "code review", "check my changes", "look over my work", "what did I miss", or any request for feedback on code changes before merging. Also use when the user invokes /code-review. Even if the user doesn't say "review" explicitly, trigger this skill when they want a second opinion on changes they've made. Do NOT use when they want the findings fixed as well as raised — use review-loop for that.
+description: Reviews code someone else wrote — a teammate's PR, a branch you did not author, or your own work in a session that did not write it. Spawns parallel specialist agents (architecture, security, correctness, testing, performance, readability), proves or refutes their falsifiable findings by running tests and API calls, and consolidates what survives into a ranked punch list. It reports; it does not change code. Use when the user asks to "review this PR", "review <someone>'s branch", "review PR #123", "look over this diff", or wants a second opinion on code they are not responsible for. Also use when the user invokes /code-review. Do NOT use for the user's own finished work in the chat that wrote it — use review-loop, which fixes what it finds.
 ---
 
 # Code Review
+
+**This reviews work you are not responsible for** — someone else's PR, a branch you didn't author, or your own work from a session that isn't this one. It reports and never edits. For your own finished work in the chat that wrote it, `review-loop` reviews and fixes in one pass.
 
 Six specialist subagents examine the same diff through different lenses. Findings that make a falsifiable claim about runtime behaviour are then executed — a verifier runs the test or hits the endpoint — so each one reaches you proven, refuted, or explicitly unverified. What survives is consolidated into a single prioritized review with file:line references for every issue.
 
@@ -39,6 +41,8 @@ Do this in the main conversation — it needs access to MCP tools (Linear) and i
 
 **Detect review target:**
 1. Check for a PR: `gh pr view --json number,title,body,baseRefName,headRefName,url,reviews,comments 2>/dev/null`
+
+   This resolves the PR for the **current branch**. To review someone else's PR, check it out first (`gh pr checkout <number>`) — the review agents and `cr-verify` both read the working tree, so reviewing a branch you haven't checked out silently reviews the wrong code. If the user names a PR that isn't checked out, say so and ask before checking it out; it changes their working directory.
 2. If PR exists: use the PR's base branch and diff
 3. If no PR: diff the current branch against the auto-detected base branch
 4. Base branch detection: check for `develop` first, fall back to `main`, then `master`. Respect `--base` override if provided.
