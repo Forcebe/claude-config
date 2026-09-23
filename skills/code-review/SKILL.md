@@ -47,10 +47,12 @@ Do this in the main conversation — it needs access to MCP tools (Linear) and i
 
    If either check fails, stop and say which one. Don't review anyway: `gh pr diff` would supply the remote change while the review agents and `cr-verify` read different local contents, so a finding could be refuted against code the PR doesn't contain. If the PR simply isn't checked out, offer `gh pr checkout <number>` and wait — it changes the user's working directory and can fail on a dirty tree.
 2. **Otherwise**, resolve the PR for the current branch: `gh pr view --json number,title,body,baseRefName,headRefName,headRefOid,url,reviews,comments 2>/dev/null`
+
+   Run the same two snapshot checks. A mismatch here means something different from step 1, though: unpushed commits and uncommitted work are the ordinary state of a branch someone is about to review, so don't stop. Keep the PR's metadata — the description and existing review comments are still worth having — but take the diff from the working tree rather than from `gh pr diff`, and record that in the Context block. The tree is what the agents read, so the tree is what they should be reviewing.
 3. If a PR was found: use its base branch and diff
 4. If no PR: diff the current branch against the auto-detected base branch
 5. Base branch detection: check for `develop` first, fall back to `main`, then `master`. Respect `--base` override if provided.
-6. Get the diff: `git diff <base>...HEAD` (for branch) or `gh pr diff` (for PR)
+6. Get the diff: `gh pr diff` only when a PR was found **and** its snapshot matched the working tree. Otherwise `git diff <base>...HEAD`. The diff and the agents must describe the same code — a finding refuted against code the reviewer never read is worse than no verification at all.
 7. Get diff stats: `git diff <base>...HEAD --stat`
 
 **Fetch external context (skip gracefully if unavailable):**
@@ -200,6 +202,7 @@ Where a `CONFIRMED` finding has a repro test attached, put it under the `**Prove
 - Linear: <issue-id> — <issue-title>       (omit if no issue)
 - PR: #<number> — <title>                  (omit if no PR)
 - Files changed: <n> | Additions: <n> | Deletions: <n>
+- Diff source: working tree — <why it differs from the PR>   (omit when they match)
 - Verified: <n> confirmed · <n> refuted · <n> unverified   (omit if --no-verify)
 
 ### Findings (<n> shown, <n> cut)
