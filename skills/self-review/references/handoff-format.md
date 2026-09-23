@@ -139,7 +139,7 @@ Made by `self-review` in adjudicate mode, or by the `cr-adjudicate` agent under 
 
 - On `ADDRESSED`: `RESOLVED` if the fix holds, else `REOPENED` with what's still wrong.
 - On `DISPUTED`: `ACCEPTED` if the pushback is reasonable, else `HELD` with a rebuttal.
-- On `STALE`: `STALE-CONFIRMED` (terminal) only when the code genuinely moved **and** the defect went with it. If the issue survives — including at a new line or in a different file — rule `REOPENED` and say where it lives now. A snippet that no longer matches proves the code changed, not that the problem is gone.
+- On `STALE`: `STALE-CONFIRMED` (terminal) when the seed snippet no longer matches — the code moved, was rewritten, or was deleted — **and** the defect went with it. Deletion is the cleanest stale case, not an edge case. If the issue survives, including at a new line or in a different file, rule `REOPENED` and say where it lives now: a snippet that no longer matches proves the code changed, not that the problem is gone.
 - Apply the [deadlock cap](#deadlock-cap).
 
 ## Approval

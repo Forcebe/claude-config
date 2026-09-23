@@ -38,7 +38,7 @@ Accepting a dispute is a success, not a loss. A review that never drops a findin
 
 Compare the current code against the seed snippet in the finding.
 
-- **confirm** — the code genuinely moved and the issue went with it. Terminal.
+- **`STALE-CONFIRMED`** — the seed snippet no longer matches the current code, whether it moved, was rewritten or was deleted outright, and the defect went with it. Terminal.
 - **`REOPENED`** — the code is materially unchanged, or it changed but the issue survives. Say which.
 
 ## Deadlock cap
