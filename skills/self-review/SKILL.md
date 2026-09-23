@@ -11,7 +11,7 @@ This skill has two modes — **seed** (round 1) and **adjudicate** (every later 
 
 ## Detect the mode
 
-1. Resolve the thread path: `.claude/reviews/<branch>.md` (replace `/` with `-` in the branch name).
+1. Resolve the thread path per the spec's [Location](references/handoff-format.md) section — including its collision check, since two branch names differing only by a slash derive the same filename.
 2. If the file does not exist → **seed**.
 3. If it exists and has findings in `ADDRESSED`/`DISPUTED`/`STALE` (writer has responded) → **adjudicate**.
 4. If it exists but has no pending writer responses → tell the human there's nothing to adjudicate yet (the writer hasn't run `apply-review`), and stop.
@@ -37,6 +37,7 @@ One reviewer turn: rule on everything the writer touched.
 1. Read the thread file and the format spec.
 2. For each `ADDRESSED`/`DISPUTED`/`STALE` finding, **re-read the current code** (never trust the line number or the writer's summary alone) and rule per the spec's [reviewer adjudications](references/handoff-format.md):
    - `ADDRESSED` → `RESOLVED` or `REOPENED` (say what's still wrong).
+   - Where the finding carries a `**Verified:**` line from seed, the fix should be judged against that check rather than against how the diff reads. Re-run it if you can; if you can't, say the ruling rests on a code read. A check you couldn't run is not a pass.
    - `DISPUTED` → `ACCEPTED` (pushback is reasonable) or `HELD` (with a concrete rebuttal).
    - `STALE` → `STALE-CONFIRMED` (terminal) or `REOPENED`.
 3. **Apply the deadlock cap**: after 2 DISPUTED↔HELD rounds without convergence, set `DEADLOCKED` and stop arguing — record both final positions.

@@ -11,7 +11,7 @@ This is one writer turn: respond to every finding that's currently your move, va
 
 ## Process
 
-1. **Locate the thread.** Default to `.claude/reviews/<branch>.md` for the current branch (replace `/` with `-`). If the user passed a path, use it. If none exists, say so and stop — there's nothing to apply.
+1. **Locate the thread.** Resolve the path per the spec's Location section, including its collision check — two branch names differing only by a slash derive the same filename. If the user passed a path, use it. If none exists, say so and stop — there's nothing to apply.
 
 2. **Read the spec and the thread.** Identify the findings that are your move: status `OPEN`, `REOPENED`, or `HELD`. Ignore terminal findings.
 
@@ -19,7 +19,7 @@ This is one writer turn: respond to every finding that's currently your move, va
 
 4. **Pick exactly one disposition per finding** (per the spec):
    - **FIXED** — the finding is valid and you changed the code. Keep the change **minimal** — fix the finding, don't refactor around it. → `ADDRESSED`, note what changed.
-   - **DISPUTE** — you disagree. Give a concrete, code-grounded reason (not "I think it's fine"). → `DISPUTED`.
+   - **DISPUTE** — you disagree. Give a concrete, code-grounded reason (not "I think it's fine"). → `DISPUTED`. A finding carrying `**Verified:** CONFIRMED` isn't disputable on the facts — something was run and the behaviour was observed. You can argue it doesn't matter or that it's intended; not that it doesn't happen.
    - **STALE** — current code no longer matches the seed snippet and the issue is gone. Say what changed it. → `STALE`.
 
    On a `HELD` finding, weigh the reviewer's rebuttal specifically — either fix it or escalate, don't just re-assert your first reason.
