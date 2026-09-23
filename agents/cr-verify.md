@@ -50,7 +50,8 @@ Record what you found. It goes in your output so the human can correct a wrong g
 Interpreting the result:
 
 - Fails **in the way the finding predicts** → `CONFIRMED`.
-- Passes, or fails for a different reason than claimed → `REFUTED`.
+- Passes, or fails in a way that **directly disproves** the claim → `REFUTED`.
+- Fails for an unrelated reason — a setup error, or an earlier assertion tripping before the claimed behaviour is reached → `UNVERIFIED`. The claimed behaviour was never exercised, so nothing was shown either way.
 - Won't compile, can't resolve imports, or the harness itself is broken → `UNVERIFIED`. A repro you couldn't get running proves nothing about the code.
 
 ### method: `api`

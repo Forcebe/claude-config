@@ -40,13 +40,13 @@ This skill uses custom subagents defined in `~/.claude/agents/`. The review agen
 Do this in the main conversation — it needs access to MCP tools (Linear) and is fast enough to run inline.
 
 **Detect review target:**
-1. **If the user named a PR** (a number or URL), resolve that one directly: `gh pr view <number> --json number,title,body,baseRefName,headRefName,url,reviews,comments`. Then confirm the working tree actually holds that PR's code, which the branch name alone does not establish:
+1. **If the user named a PR** (a number or URL), resolve that one directly: `gh pr view <number> --json number,title,body,baseRefName,headRefName,headRefOid,url,reviews,comments`. Then confirm the working tree actually holds that PR's code, which the branch name alone does not establish:
 
    - `git rev-parse HEAD` must equal the PR's `headRefOid`. A local branch of the same name can sit behind the remote, or carry an unpushed commit.
    - `git status --porcelain` must be empty. Uncommitted work means the tree differs from the PR whatever the commit says.
 
    If either check fails, stop and say which one. Don't review anyway: `gh pr diff` would supply the remote change while the review agents and `cr-verify` read different local contents, so a finding could be refuted against code the PR doesn't contain. If the PR simply isn't checked out, offer `gh pr checkout <number>` and wait — it changes the user's working directory and can fail on a dirty tree.
-2. **Otherwise**, resolve the PR for the current branch: `gh pr view --json number,title,body,baseRefName,headRefName,url,reviews,comments 2>/dev/null`
+2. **Otherwise**, resolve the PR for the current branch: `gh pr view --json number,title,body,baseRefName,headRefName,headRefOid,url,reviews,comments 2>/dev/null`
 3. If a PR was found: use its base branch and diff
 4. If no PR: diff the current branch against the auto-detected base branch
 5. Base branch detection: check for `develop` first, fall back to `main`, then `master`. Respect `--base` override if provided.
@@ -132,7 +132,7 @@ If applying a floor moves a finding, the tier was wrong, not the severity.
 1. **Merge overlapping findings**: When multiple agents flag the same code location for related reasons, combine into one finding listing all relevant domains. Keep the highest severity, the clearest `problem`/`fix` pair, and the most concrete `verification` block of the ones merged — a single well-specified repro beats two vague ones.
 2. **Apply severity definitions**: Re-classify each finding using the definitions above. Agents tend to over-classify — a scalability concern is a warning, not a critical. Be strict.
 3. **Assign a priority tier**: Pick it from the table, then apply the floors. Merged findings take the strongest tier of the ones merged.
-4. **Assign stable ids**: Number the surviving findings `#1`, `#2`, … ordered by tier. These ids appear in the output and are what the verifier reports against.
+4. **Assign stable ids**: Number the surviving findings `#1`, `#2`, … ordered by priority tier, then by blast radius — the same key step 6 ranks by, so an id never disagrees with where its finding appears. These ids are what the verifier, the output and the review thread all refer to.
 5. **Build the verification queue**: Every finding whose `verification.falsifiable` is true. If `--no-verify` was passed, or the queue is empty, skip the Verify step and treat every finding as `N/A`.
 
 Do not rank, cap, or rewrite prose yet — verification may still remove findings, and polishing something that's about to be refuted is wasted work.
@@ -178,7 +178,7 @@ Every `problem` and `fix` below must satisfy [references/comment-style.md](refer
 **Per-finding format:**
 
 ```
-**<n>. <summary>** [<P-tier> · <Severity> · <Domain>, <Domain>]
+**#<id>. <summary>** [<P-tier> · <Severity> · <Domain>, <Domain>]
 `<file>:<line-start>-<line-end>`
 <problem>
 **Fix:** <fix>
@@ -186,7 +186,7 @@ Every `problem` and `fix` below must satisfy [references/comment-style.md](refer
 **Unverified:** <why it couldn't be checked>          (UNVERIFIED only)
 ```
 
-Findings are numbered in rank order and separated by a `---` line. A `N/A` finding carries neither verification line — that's the normal state for judgement findings, and annotating it would imply something failed.
+Findings carry their stable id, which is also their rank order, and are separated by a `---` line. Use the id — never a second, positional numbering — so that a reference anywhere else, in the Refuted block or in the review thread, points at the same finding. Ids may skip where a finding was refuted or cut; that's expected, and the header accounts for both. A `N/A` finding carries neither verification line — that's the normal state for judgement findings, and annotating it would imply something failed.
 
 Where a `CONFIRMED` finding has a repro test attached, put it under the `**Proven:**` line as a fenced block. It's pasteable straight into the fix, which is most of its value.
 
