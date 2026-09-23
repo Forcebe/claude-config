@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Reviews code someone else wrote — a teammate's PR, a branch you did not author, or your own work in a session that did not write it. Spawns parallel specialist agents (architecture, security, correctness, testing, performance, readability), proves or refutes their falsifiable findings by running tests and API calls, and consolidates what survives into a ranked punch list. It reports; it does not change code. Use when the user asks to "review this PR", "review <someone>'s branch", "review PR #123", "look over this diff", or wants a second opinion on code they are not responsible for. Also use when the user invokes /code-review. Do NOT use for the user's own finished work in the chat that wrote it — use review-loop, which fixes what it finds.
+description: Reviews code someone else wrote — a teammate's PR, a branch you did not author, or your own work in a session that did not write it. Spawns parallel specialist agents (architecture, security, correctness, testing, performance, readability), proves or refutes their falsifiable findings by running tests and API calls, and consolidates what survives into a ranked punch list. It reports; it does not change code. Use when the user asks to "review this PR", "review <someone>'s branch", "review PR 123", "look over this diff", or wants a second opinion on code they are not responsible for. Also use when the user invokes /code-review. Do NOT use for the user's own finished work in the chat that wrote it — use review-loop, which fixes what it finds.
 ---
 
 # Code Review
@@ -40,9 +40,12 @@ This skill uses custom subagents defined in `~/.claude/agents/`. The review agen
 Do this in the main conversation — it needs access to MCP tools (Linear) and is fast enough to run inline.
 
 **Detect review target:**
-1. **If the user named a PR** (a number or URL), resolve that one directly: `gh pr view <number> --json number,title,body,baseRefName,headRefName,url,reviews,comments`. Compare its `headRefName` against `git branch --show-current`.
+1. **If the user named a PR** (a number or URL), resolve that one directly: `gh pr view <number> --json number,title,body,baseRefName,headRefName,url,reviews,comments`. Then confirm the working tree actually holds that PR's code, which the branch name alone does not establish:
 
-   If they differ, the PR isn't checked out. Say so and ask before running `gh pr checkout <number>` — it changes the user's working directory, and it may fail or discard work if their tree is dirty. Don't proceed without it: the review agents and `cr-verify` both read the working tree, so reviewing a branch that isn't checked out silently reviews whatever is there instead.
+   - `git rev-parse HEAD` must equal the PR's `headRefOid`. A local branch of the same name can sit behind the remote, or carry an unpushed commit.
+   - `git status --porcelain` must be empty. Uncommitted work means the tree differs from the PR whatever the commit says.
+
+   If either check fails, stop and say which one. Don't review anyway: `gh pr diff` would supply the remote change while the review agents and `cr-verify` read different local contents, so a finding could be refuted against code the PR doesn't contain. If the PR simply isn't checked out, offer `gh pr checkout <number>` and wait — it changes the user's working directory and can fail on a dirty tree.
 2. **Otherwise**, resolve the PR for the current branch: `gh pr view --json number,title,body,baseRefName,headRefName,url,reviews,comments 2>/dev/null`
 3. If a PR was found: use its base branch and diff
 4. If no PR: diff the current branch against the auto-detected base branch
@@ -59,10 +62,12 @@ Do this in the main conversation — it needs access to MCP tools (Linear) and i
 
 Spawn a single `cr-explore` agent. Pass it the list of changed file paths from the diff. It returns a structured context package containing:
 
-1. Full content of all changed files
+1. Paths of all changed files, each with a one-line note on what it is
 2. Dependency graph (imports in/out for each changed file)
-3. Existing test files for changed modules
-4. All discovered repo documentation (CLAUDE.md, READMEs, architecture docs, skills)
+3. Paths of existing test files for changed modules
+4. Repo conventions that bear on the changed files, extracted from CLAUDE.md, READMEs and architecture docs, plus the paths those came from
+
+It returns paths and structure, not file contents. The brief below is pasted into six prompts, so anything inlined here is paid for six times — and each reviewer has `Read` and only needs the files its own domain cares about.
 
 ```
 Use the Agent tool with:
@@ -86,13 +91,14 @@ The 6 required `subagent_type` values:
 Note: Claude Code's grouped agent panel may display fewer than 6 entries because finished agents drop off as new ones complete. This is a UI rendering quirk, not a sign that an agent failed to run. Confirm by checking that all 6 returned structured findings before consolidating — if any are genuinely missing, re-spawn the missing ones.
 
 **The context brief includes:**
-- The full diff
-- Full content of all changed files (from cr-explore)
-- Dependency graph (from cr-explore)
-- Existing test files (from cr-explore)
-- Repo documentation and conventions (from cr-explore)
+- The full diff — the one thing every reviewer needs in full
+- Changed file paths and the dependency graph (from cr-explore)
+- Test file paths for the changed modules (from cr-explore)
+- The repo conventions digest and the doc paths behind it (from cr-explore)
 - Linear issue context (from Step 1, if available)
 - PR description and existing review comments (from Step 1, if available)
+
+Reviewers read the files they need themselves. Don't inline file contents here — six prompts means paying for them six times, and each domain only reads a fraction of them.
 
 Each agent returns structured JSON with findings. An empty findings array is a valid, good outcome.
 

@@ -41,8 +41,7 @@ Return your findings in this structure:
 
 ```
 ## Changed Files
-### <file-path>
-<full file content>
+- <file-path> — <one line: what this file is and what the diff does to it>
 
 ## Dependency Graph
 ### <file-path>
@@ -50,12 +49,15 @@ Imports: <list of imported file paths>
 Imported by: <list of files that import this>
 
 ## Test Files
-### <test-file-path>
-<full test file content>
+- <test-file-path> — covers <which changed module>
 
-## Repo Documentation
-### <doc-file-path>
-<full document content>
+## Repo Conventions
+- <a rule that bears on the changed files, stated in one line>
+(at most 15 bullets, drawn from CLAUDE.md, READMEs and architecture docs)
+
+Sources: <doc-file-path>, <doc-file-path>
+
+Return paths and structure, never file contents. This package is pasted into six reviewer prompts, so every line you inline is paid for six times — and each reviewer can read any file it needs for itself.
 ```
 
 If a section has no results (e.g., no test files found), note that explicitly rather than omitting the section.
