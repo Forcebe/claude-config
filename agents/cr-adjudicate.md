@@ -70,4 +70,4 @@ Respond with ONLY this JSON, no other text:
 }
 ```
 
-`new_findings` is for defects the fixes themselves introduced — a fix that breaks a caller, a fix that silences an error instead of handling it. Use the same shape as a review finding, including its `verification` block. Leave it empty unless a fix genuinely created a problem; this is not an opportunity for a fresh review of the branch.
+`new_findings` is for defects the fixes themselves introduced — a fix that breaks a caller, a fix that silences an error instead of handling it. Use the same shape as a review finding: `summary` (one line, at most 10 words, naming the consequence), `problem` (at most two sentences, symptom first), `fix` (one imperative sentence), plus `severity` and a `verification` block. It clears the same bar as any other finding — name what breaks, and flag a convention only where the repo documents it. Leave it empty unless a fix genuinely created a problem; this is not an opportunity for a fresh review of the branch.

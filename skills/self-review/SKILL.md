@@ -23,8 +23,7 @@ Produce the same analysis as the `code-review` skill, then serialize it into the
 1. **Run the review engine.** Follow `code-review`'s process steps 1–6 (Gather Context → Explore → 6 parallel `cr-review-*` agents → Merge and Queue → Verify → Consolidate), including its severity definitions. Reuse the same `cr-explore`, `cr-review-*` and `cr-verify` subagents; do not reinvent them.
 
    Verification changes what reaches the thread: findings the verifier **refuted** never become findings the writer has to answer, and a **confirmed** finding carries its evidence — the command and what it showed — into the thread, which is far harder to dispute than a claim.
-2. **Serialize, don't prettify.** Two deliberate differences from `code-review`'s terminal output:
-   - **Skip the comment-style voice rewrite.** The reader is an agent verifying against code, not a human skimming prose. Keep findings terse and concrete.
+2. **Serialize, don't prettify.** One deliberate difference from `code-review`'s terminal output:
    - **No cap.** `code-review` keeps the top 10 because a human is reading a terminal. The thread's reader is an agent working findings one at a time, and a cut finding never gets answered — so keep everything that cleared the bar. (Still rank by severity.)
 3. **Capture a seed snippet** for every finding: the exact cited code as it stands now. This is what the writer checks staleness against.
 4. **Set every finding `OPEN`**, keeping the ids assigned during Merge and Queue so the thread and the verifier's evidence refer to the same numbers.

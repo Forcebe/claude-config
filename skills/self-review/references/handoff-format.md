@@ -37,7 +37,7 @@ Regenerate this block from scratch each turn. Exact layout:
 ## Review thread: <branch>  ·  turn <n> (<who> <move>)
 
 ### ⚠ Needs your decision (<count>)
-- #<id> <STATUS> — <one-line topic>
+- #<id> <STATUS> — <the finding's summary>
     writer:   "<one sentence>"
     reviewer: "<one sentence>"
 - ...
