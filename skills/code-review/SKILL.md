@@ -58,6 +58,11 @@ Do this in the main conversation — it needs access to MCP tools (Linear) and i
    - **Otherwise:** `BASE=$(git merge-base <base> HEAD)`, then `git diff $BASE`. Two dots against the working tree, not `git diff <base>...HEAD` — the three-dot form shows committed changes only, which omits exactly the uncommitted work you fell back to review.
    - **Untracked files appear in no `git diff`.** List them with `git ls-files --others --exclude-standard` and treat each as an addition. If there are more than a handful, they're usually scaffolding rather than part of the change: name them in the Context block and include only the ones the change actually touches.
 7. Get diff stats from that same source: `gh pr diff --patch | diffstat`-style counts, or `git diff $BASE --stat` plus the untracked additions.
+8. **Write the diff to disk, one file per changed file.** `mkdir -p .claude/review-diffs`, create `.claude/review-diffs/.gitignore` containing a single `*` if it isn't there, then for each changed path run `git diff "$BASE" -- <path>` (or `gh pr diff` filtered to that path) into `.claude/review-diffs/<path with / replaced by ->.diff`. Render an untracked file with `git diff --no-index /dev/null <path>`.
+
+   Do this with shell redirection so the diff never passes through your own output. The six reviewer prompts are written in a single message, and a diff inlined into each one is emitted six times from the same response — a moderately large PR exceeds the output limit partway through, so some reviewers never start and the rest have to be sent again. Paths cost a few tokens; the diff costs thousands, six times over.
+
+   One file per changed file also keeps each under the `Read` limit and lets a reviewer skip what its domain doesn't care about. Delete the directory's contents once the review is written.
 
 **Fetch external context (skip gracefully if unavailable):**
 
@@ -97,14 +102,14 @@ The 6 required `subagent_type` values:
 Note: Claude Code's grouped agent panel may display fewer than 6 entries because finished agents drop off as new ones complete. This is a UI rendering quirk, not a sign that an agent failed to run. Confirm by checking that all 6 returned structured findings before consolidating — if any are genuinely missing, re-spawn the missing ones.
 
 **The context brief includes:**
-- The full diff — the one thing every reviewer needs in full
+- The path to each per-file diff under `.claude/review-diffs/`, paired with the file it describes. Reviewers `Read` the ones their domain cares about. Never inline the diff itself.
 - Changed file paths and the dependency graph (from cr-explore)
 - Test file paths for the changed modules (from cr-explore)
 - The repo conventions digest and the doc paths behind it (from cr-explore)
 - Linear issue context (from Step 1, if available)
 - PR description and existing review comments (from Step 1, if available)
 
-Reviewers read the files they need themselves. Don't inline file contents here — six prompts means paying for them six times, and each domain only reads a fraction of them.
+Reviewers read what they need themselves — both the source files and the diffs. Nothing bulky is inlined here: this brief is written once per reviewer into a single message, so anything it carries is emitted six times from one response, and a large enough brief truncates that message before all six agents have been started.
 
 Each agent returns structured JSON with findings. An empty findings array is a valid, good outcome.
 
