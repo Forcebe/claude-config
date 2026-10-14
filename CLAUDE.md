@@ -7,6 +7,9 @@ Write fewer, leaner comments. The code should speak for itself.
 - Prefer making the code self-explanatory — clear names, small functions — over explaining it in prose.
 - Never reference tickets, PRs, or issue IDs in comments; they go stale. That context belongs in the commit message or PR description.
 - Clean as you go: when you touch a file, apply the same bar to the existing comments nearby — remove or fix ones that are redundant, stale, or describe the what.
+- Test each comment by asking: would a reader miss it if it were deleted? If not, delete it. A true "why" comment can still be redundant.
+- State each fact once, where a reader will look for it: the public contract (e.g. a DTO) over internal types, and the schema over the code that uses it. Delete the copies elsewhere.
+- A comment that restates a name, a signature, or the line below it is a deletion, not a rewrite.
 
 # PR descriptions
 
