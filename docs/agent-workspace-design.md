@@ -125,7 +125,9 @@ A directory symlink cannot exclude entries, so `~/.claude/skills` and `~/.claude
 
 ## Skills
 
-Added: `setup-workspace`, `grilling`, `domain-modeling`, `grill-with-docs`, `research`, `triage`, `implement`, `implement-spec`, `wayfinder`, `retro`, `diagnosing-bugs`, `codebase-design`, `wizard`.
+Added, built: `setup-workspace`, `grilling`, `domain-modeling`, `grill-with-docs`, `research`, `triage`.
+
+Added, still to come: `implement` and `implement-spec` (phase 5), `wayfinder` (phase 6), `retro`, `diagnosing-bugs`, `codebase-design` and `wizard` (phase 7).
 
 Changed: `to-spec` and `to-tickets` move onto the run graph and stop writing labels to Linear; `grill-me` and `grill-issue` are rewired onto the extracted `grilling` primitive; `handoff` writes into the workspace instead of `mktemp`; the review skills gain the layer-aware deployment fix.
 
@@ -237,7 +239,7 @@ Task graph format, claims, frontier, `cw status`, `SessionStart` hook.
 
 ### What is actually proven
 
-A criterion written down is not a criterion met. Phases 1 to 3 carry 74 automated checks, but some criteria are not the kind a script can settle, and a few are simply not settled yet. Keeping the distinction visible is the point: the alternative is believing the suite covers more than it does.
+A criterion written down is not a criterion met. The suites carry a lot of checks, but some criteria are not the kind a script can settle, and a few are simply not settled yet. Keeping the distinction visible is the point: the alternative is believing the suite covers more than it does. Run the suites for the current count rather than trusting a number written here.
 
 **Proven by automated test.** Everything about `cw`'s resolution, storage mode, run graph, claims, frontier, `cw status`, the deploy's exclusions and orphan handling, and the invocation invariant. These re-run on every phase.
 
@@ -250,6 +252,7 @@ A criterion written down is not a criterion met. Phases 1 to 3 carry 74 automate
 - `grill-issue` has not been run since it was rewired onto `grilling`, and `review-loop` has not been run since it started resolving to the plugin's copy. Both need a `~/tmrw` repo and a live conversation.
 - The `handoff` and `grill-*` skills' own invocation is unexercised: they are user-invoked, so no headless run can fire them. Their underlying mechanisms are proven; the slash command itself needs a human.
 - "A skill that calls `code-review` still resolves it" is vacuous: nothing calls it until phase 5.
+- Phase 4 is prose a model follows, so its suite checks the constraints that prose must satisfy — no workflow labels, writes into the run graph, one vocabulary for seams — not that a model obeyed it. A full `to-spec` → `to-tickets` → publish cycle on a `~/tmrw` repo is still unrun.
 
 ### AFK agents need `cw` permitted
 
@@ -278,6 +281,8 @@ Bootstrap order, since phase 1 cannot track itself:
 2. Run `setup-workspace` on this repo, as the first real use.
 3. Run a grilling and domain-modeling pass over the design conversation to produce `GLOSSARY.md`, pinning the vocabulary before phases 3 through 7 drift from it.
 4. Build phase 2, then seed the run graph with tickets for phases 3 through 7. From there the work tracks itself.
+
+Steps 1, 2 and 4 were done. **Step 3 was skipped**, and the cost has shown up exactly where it was predicted: every review pass since has caught vocabulary drift — `existing seams` against `seams that already exist`, `PRD` against `spec`, `issues` against `tickets`. The terms are settled enough now to write down, and doing so would turn a recurring review finding into a test.
 
 One risk to hold onto: dogfooding a half-built system on the repository that *is* the system means a broken skill can block the work of fixing it. So phase 1's tooling stays simple and independently testable, and the run graph never becomes the only record of what is left to build. This note is the backstop.
 
