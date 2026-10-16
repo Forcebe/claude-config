@@ -117,7 +117,9 @@ Skills that become user-invoked, with `disable-model-invocation: true`: `setup-w
 
 Fix: make `dev-env`'s `claude` run script layer-aware, so it skips linking the colliding entries when `layer=work`.
 
-The collision is **two** skills, not four: `tmrw-standards` ships `code-review` and `review-loop`, but has no `self-review` or `apply-review`, so skipping all four would have deleted two working skills. All nine `cr-*` agents do come from the plugin, so none of this repo's are linked on the work layer.
+The collision is **two** skills, not four: `tmrw-standards` ships `code-review` and `review-loop`, but has no `self-review` or `apply-review`, so skipping all four would have deleted two working skills.
+
+It is **skills only**. The plugin also ships nine `cr-*` agent files, but plugin agents surface under a `plugin:name` prefix and these never did: the bare `cr-*` types the review skills spawn come from this repo. Skipping them on the work layer broke those skills, so agents are linked on every layer.
 
 A directory symlink cannot exclude entries, so `~/.claude/skills` and `~/.claude/agents` are now real directories of per-entry links, rebuilt on each run. The rebuild removes only links pointing into this repo, so anything else kept there survives, and a deleted skill or a layer switch leaves no orphan. It also moved where Claude Code writes `skills/synced/`: out of this repo, where it only lived because the whole directory was the link target, and into `~/.claude/skills/`.
 

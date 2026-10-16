@@ -80,6 +80,26 @@ if [[ -d "$deployed" && ! -L "$deployed" ]]; then
 		done
 	fi
 	check "no skill name resolves to two definitions" "" "${dupes% }"
+
+	# The review skills spawn these by bare name. Plugin agents surface under a
+	# "plugin:name" prefix, so the plugin's copies are not substitutes: drop
+	# these from the deploy and the review skills lose their subagents.
+	agents="$HOME/.claude/agents"
+	missing_agents=""
+	for a in "$root"/agents/*.md; do
+		n=$(basename "$a")
+		[[ -e "$agents/$n" ]] || missing_agents+="$n "
+	done
+	check "every cr-* agent is deployed, on any layer" "" "${missing_agents% }"
+
+	# Every skill in the repo that is not deliberately excluded should be there.
+	undeployed=""
+	for d in "$skills"/*/; do
+		n=$(basename "$d")
+		[[ "$n" == "code-review" || "$n" == "review-loop" ]] && continue
+		[[ -e "$deployed/$n" ]] || undeployed+="$n "
+	done
+	check "every other skill is deployed" "" "${undeployed% }"
 else
 	echo "  skip  ~/.claude/skills is not deployed as a directory"
 fi
