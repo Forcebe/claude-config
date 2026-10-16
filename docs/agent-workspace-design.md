@@ -107,9 +107,9 @@ A linear chain of blocking edges is a stack, and `to-tickets` marks chains as su
 
 Matt's split between model-invoked and user-invoked skills rests on one invariant: **a user-invoked skill can never be called by another skill.** That invariant, plus the call graph, determines which side each skill lands on.
 
-Skills that must stay model-invoked, because other skills call them via the Skill tool: `grilling`, `domain-modeling`, `codebase-design`, `tdd`, `prototype`, `research`, `review-loop`, `code-review`, and the `tmrw-standards` plugin's `commit` and `create-pr`. `codebase-design` belongs here because `tdd` and `improve-codebase-architecture` both reach it that way.
+Skills that must stay model-invoked, because other skills call them via the Skill tool: `grilling`, `domain-modeling`, `codebase-design`, `tdd`, `prototype`, `research`, `implement`, `review-loop`, `code-review`, and the `tmrw-standards` plugin's `commit` and `create-pr`. `codebase-design` belongs here because `tdd` and `improve-codebase-architecture` both reach it that way, and `implement` because `implement-spec` dispatches each ticket to it.
 
-Skills that become user-invoked, with `disable-model-invocation: true`: `setup-workspace`, `grill-me`, `grill-issue`, `grill-with-docs`, `to-spec`, `to-tickets`, `triage`, `implement`, `implement-spec`, `wayfinder`, `handoff`, `improve-codebase-architecture`, `self-review`, `apply-review`, `retro`, `diagnosing-bugs`, `wizard`.
+Skills that become user-invoked, with `disable-model-invocation: true`: `setup-workspace`, `grill-me`, `grill-issue`, `grill-with-docs`, `to-spec`, `to-tickets`, `triage`, `implement-spec`, `wayfinder`, `handoff`, `improve-codebase-architecture`, `self-review`, `apply-review`, `retro`, `diagnosing-bugs`, `wizard`.
 
 ### A conflict to resolve first
 
@@ -161,7 +161,7 @@ Adding it as a personal skill would recreate the duplicate-name and conflicting-
 
 Criteria marked **[tmrw]** cannot be validated in this repository and need a `~/tmrw` repo.
 
-**Phases 1 to 4 are complete.** Their automated criteria live in `tests/phase-1.sh` through `tests/phase-4.sh`; phase 1's tmux, worktree and shared-repo criteria are the manual checklist its script prints, and all have been run, the last against `tmrw-core-api`.
+**Phases 1 to 5 are complete.** Their automated criteria live in `tests/phase-1.sh` through `tests/phase-5.sh`, with `tests/glossary.sh` cutting across them; phase 1's tmux, worktree and shared-repo criteria are the manual checklist its script prints, and all have been run, the last against `tmrw-core-api`.
 
 ### Phase 1 — Foundation
 
@@ -221,7 +221,10 @@ Run graph format, claims, frontier, `cw status`, `SessionStart` hook.
 ### Phase 5 — Implement
 
 - `implement <ticket>` claims the ticket, creates a worktree through `wt-add`, builds, runs `review-loop`, commits, and releases the claim.
-- A chain-shaped graph selects stack mode; a fan-out selects integration mode.
+- A chain-shaped graph selects stack mode; a fan-out selects integration mode, decided by `cw shape` rather than by eye.
+- `cw shape` reads the edges, not the progress: a partly-worked chain is still a chain.
+- `implement` claims before it builds, and stops rather than working a ticket another session holds.
+- `implement-spec` warns that subagents need `cw` on the permission allowlist before it spawns any.
 - **[tmrw]** `implement-spec` on a three-ticket chain produces three stacked PRs with correct base branches.
 
 ### Phase 6 — Wayfinder

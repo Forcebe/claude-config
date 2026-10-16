@@ -17,6 +17,7 @@ Entry points. Type them; nothing else can.
 - **to-spec** — Synthesize a spec from the conversation, codebase exploration, and test-seam design, saved into the run graph.
 - **to-tickets** — Break a spec into tracer-bullet tickets in the run graph, each declaring its blocking edges.
 - **triage** — Take a ticket from raw to agent-ready: verify the claim, grill it into shape, write the brief. States stay local.
+- **implement-spec** — Build a whole run: work its frontier until the graph is empty, as a stack of PRs or on one integration branch.
 - **improve-codebase-architecture** — Explore a codebase for module-deepening refactors.
 - **handoff** — Compact the conversation into a handoff document for another agent to pick up.
 - **self-review** — Reviewer side of a writer↔reviewer thread on your own branch.
@@ -31,6 +32,7 @@ Primitives and references. Skills call these; so can you.
 - **research** — Delegate reading to a background agent, which cites primary sources and leaves a Markdown file in the workspace.
 - **tdd** — Test-driven development with the red-green-refactor loop.
 - **prototype** — Build a throwaway prototype to answer a design question.
+- **implement** — Build one ticket: claim, worktree, TDD, review, close. Model-invoked because `implement-spec` dispatches each ticket to it.
 - **gh-stack** — Manage stacked branches and PRs with the gh-stack CLI extension.
 - **code-review** — Multi-agent review over a diff, proving or refuting findings by running tests and API calls.
 - **review-loop** — The whole writer↔reviewer negotiation, in the chat that wrote the code.
@@ -52,6 +54,7 @@ cw --mode     # "in-repo", "sidecar", or "unconfigured"
 
 cw status                 # every worktree, its branch, tmux session and claims
 cw frontier <run>         # tickets that are open, unblocked and unclaimed
+cw shape <run>            # "chain" (stackable) or "fan-out" (needs integration)
 cw claim <run> <ticket>   # atomic; non-zero exit if someone already holds it
 cw close <run> <ticket>   # mark done, and release
 ```

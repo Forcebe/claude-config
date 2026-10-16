@@ -9,7 +9,7 @@ usage() {
 	cat <<'EOF'
 Usage: cw [--state | --sidecar | --repo | --key | --mode]
        cw status
-       cw frontier <run>
+       cw frontier|shape <run>
        cw claim|release|close <run> <ticket>
 
 Flags resolve paths and never write. Verbs act on the run graph.
@@ -24,6 +24,7 @@ Flags resolve paths and never write. Verbs act on the run graph.
 
   status              Live worktrees, their branches, tmux sessions and claims
   frontier <run>      Tickets that are open, unblocked and unclaimed
+  shape <run>         "chain" if the blocking edges form one path, else "fan-out"
   claim <run> <t>     Take a ticket. Fails if someone already holds it
   release <run> <t>   Give it back
   close <run> <t>     Mark it done, which also releases it
@@ -177,6 +178,34 @@ cmd_frontier() {
 	done
 }
 
+# A chain is a single path: one start, and nothing ever branching or merging.
+# Anything else fans out. The distinction decides whether a run's tickets can
+# become a stack of pull requests or have to share an integration branch.
+cmd_shape() {
+	local id other blocker blockers roots=0 maxblockers=0 maxdeps=0 n
+	require_run "$1"
+	for id in $(ticket_ids "$run_dir"); do
+		blockers=$(ticket_field "$run_dir/tickets/$id.md" blocked-by)
+		n=$(printf '%s' "$blockers" | wc -w | tr -d ' ')
+		if [[ "$n" -eq 0 ]]; then roots=$((roots + 1)); fi
+		if [[ "$n" -gt "$maxblockers" ]]; then maxblockers=$n; fi
+
+		n=0
+		for other in $(ticket_ids "$run_dir"); do
+			for blocker in $(ticket_field "$run_dir/tickets/$other.md" blocked-by); do
+				if [[ "$blocker" == "$id" ]]; then n=$((n + 1)); fi
+			done
+		done
+		if [[ "$n" -gt "$maxdeps" ]]; then maxdeps=$n; fi
+	done
+
+	if [[ "$roots" -eq 1 && "$maxblockers" -le 1 && "$maxdeps" -le 1 ]]; then
+		printf 'chain\n'
+	else
+		printf 'fan-out\n'
+	fi
+}
+
 # mkdir is the lock: it is atomic on every filesystem we care about, so the
 # first of two concurrent worktrees wins and the loser sees a plain failure.
 cmd_claim() {
@@ -257,6 +286,7 @@ case "${1:-}" in
 --mode) mode && echo ;;
 status) cmd_status ;;
 frontier) [[ $# -eq 2 ]] || usage; cmd_frontier "$2" ;;
+shape) [[ $# -eq 2 ]] || usage; cmd_shape "$2" ;;
 claim) [[ $# -eq 3 ]] || usage; cmd_claim "$2" "$3" ;;
 release) [[ $# -eq 3 ]] || usage; cmd_release "$2" "$3" ;;
 close) [[ $# -eq 3 ]] || usage; cmd_close "$2" "$3" ;;
