@@ -180,7 +180,7 @@ Criteria marked **[tmrw]** cannot be validated in this repository and need a `~/
 
 ### Phase 2 — Run layer
 
-Task graph format, claims, frontier, `cw --status`, `SessionStart` hook.
+Task graph format, claims, frontier, `cw status`, `SessionStart` hook.
 
 - A run with three tickets and a blocking chain exposes exactly one frontier ticket.
 - Claiming from worktree A succeeds; claiming the same ticket from worktree B fails.
@@ -198,6 +198,9 @@ Task graph format, claims, frontier, `cw --status`, `SessionStart` hook.
 - A skill that calls `code-review` still resolves it.
 - **[tmrw]** On the work layer, `code-review` and `review-loop` each resolve to exactly one definition.
 - Deleting a skill from this repo removes it from `~/.claude/skills` on the next deploy, and switching layers does not leave orphans behind.
+- No skill names a user-invoked skill to the Skill tool, and every skill it does name exists.
+- Every `cr-*` agent is deployed on **both** layers, and every skill except the two the plugin replaces is deployed.
+- No user-invoked skill keeps a model-facing trigger list in its description.
 
 ### Phase 4 — Spec pipeline
 

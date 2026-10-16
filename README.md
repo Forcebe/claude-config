@@ -69,10 +69,12 @@ The sidecar lives at `~/.claude-workspace`, overridable with `CLAUDE_WORKSPACE_R
 
 ## Setup
 
-```sh
-ln -s ~/personal/claude-config/skills ~/.claude/skills
-ln -s ~/personal/claude-config/agents ~/.claude/agents
-ln -s ~/personal/claude-config/scripts/cw ~/.local/bin/cw
-```
+`dev-env`'s `claude` run script does all of this; run `./run claude` there.
 
-`dev-env`'s `claude` run script does all three.
+`~/.claude/skills` and `~/.claude/agents` are **directories of per-entry symlinks**, not directory symlinks, rebuilt on each deploy. A directory symlink cannot exclude entries, and on the work layer two of these skills have to be excluded because `tmrw-standards` ships its own:
+
+- **skills**: every one except `code-review` and `review-loop` on the work layer, which come from the plugin instead. `self-review` and `apply-review` have no plugin equivalent and are deployed on both layers.
+- **agents**: all of them, on both layers. The plugin ships `cr-*` files too, but plugin agents surface under a `plugin:name` prefix, so they are not substitutes for the bare types the review skills spawn.
+- **scripts**: `cw` and `session-context` into `~/.local/bin`, which `dev-env` does not wipe.
+
+The rebuild removes only links pointing into this repo, so anything else kept in those directories survives, and a deleted skill leaves no orphan. `skills/synced/` is written by Claude Code into `~/.claude/skills/`, not here.
