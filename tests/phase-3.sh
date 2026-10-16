@@ -105,5 +105,45 @@ else
 fi
 
 echo
+echo "layer switching"
+# The deploy function lives in dev-env. Exercised here against throwaway
+# directories, because the failure it guards against — a layer switch leaving
+# a skill behind that the other layer excludes — cannot be seen by inspection.
+devenv="$HOME/personal/dev-env/runs/claude"
+if [[ -f "$devenv" ]]; then
+	tmp=$(cd "$(mktemp -d "${TMPDIR:-/tmp}/layer-XXXXXX")" && pwd -P)
+	claude_config_dir="$tmp/src"
+	mkdir -p "$claude_config_dir"/{skills/code-review,skills/grilling,skills/self-review,agents}
+	touch "$claude_config_dir"/skills/{code-review,grilling,self-review}/SKILL.md
+	touch "$claude_config_dir"/agents/cr-verify.md
+	log_step() { :; }
+	# shellcheck disable=SC1090
+	eval "$(sed -n '/^link_entries()/,/^}/p' "$devenv")"
+	execute() { "$@"; }
+
+	dest="$tmp/dest"
+	link_entries "$claude_config_dir/skills" "$dest" "code-review review-loop"
+	check "work layer excludes the plugin's skills" "grilling self-review" \
+		"$(cd "$dest" && printf '%s ' * | sed 's/ $//')"
+
+	link_entries "$claude_config_dir/skills" "$dest" ""
+	check "switching to personal restores them" "code-review grilling self-review" \
+		"$(cd "$dest" && printf '%s ' * | sed 's/ $//')"
+
+	link_entries "$claude_config_dir/skills" "$dest" "code-review review-loop"
+	check "switching back leaves no orphan" "grilling self-review" \
+		"$(cd "$dest" && printf '%s ' * | sed 's/ $//')"
+
+	touch "$dest/not-ours"
+	link_entries "$claude_config_dir/skills" "$dest" ""
+	check "a file we do not own survives a rebuild" "yes" \
+		"$([[ -e "$dest/not-ours" ]] && echo yes || echo no)"
+
+	rm -rf "$tmp"
+else
+	echo "  skip  dev-env not present"
+fi
+
+echo
 printf '%d passed, %d failed\n' "$pass" "$fail"
 [[ "$fail" -eq 0 ]]

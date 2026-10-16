@@ -232,6 +232,23 @@ Task graph format, claims, frontier, `cw status`, `SessionStart` hook.
 - `deep-modules.md`, `interface-design.md` and `refactoring.md` live in `codebase-design` and no longer in `tdd`, and `tdd` reaches them by calling the Skill tool.
 - `improve-codebase-architecture` scopes its scan from `git log` hot spots before exploring, and applies the deletion test to each suspected shallow module.
 
+### What is actually proven
+
+A criterion written down is not a criterion met. Phases 1 to 3 carry 74 automated checks, but some criteria are not the kind a script can settle, and a few are simply not settled yet. Keeping the distinction visible is the point: the alternative is believing the suite covers more than it does.
+
+**Proven by automated test.** Everything about `cw`'s resolution, storage mode, run graph, claims, frontier, `cw status`, the deploy's exclusions and orphan handling, and the invocation invariant. These re-run on every phase.
+
+**Proven by hand, once, in the session that built it.** `wt-add` unchanged and `--no-attach` not moving the client; the run graph surviving `wt-rm`; `setup-workspace` on this repo and on `tmrw-core-api`. The last two were executed step by step rather than invoked as a skill, so the skill's own prose is unexercised.
+
+**Not yet proven.**
+
+- The `SessionStart` hook has never fired in a real session. Its output has been checked directly, but nothing has confirmed the context reaches an agent.
+- `handoff` writing into the workspace, and `prototype` keeping its branch local, are prose changes no run has exercised.
+- `grill-issue` has not been run since it was rewired onto `grilling`, and `review-loop` has not been run since it started resolving to the plugin's copy.
+- "A skill that calls `code-review` still resolves it" is vacuous: nothing calls it until phase 5.
+
+Closing the first three needs a second worktree with a real session in it, which is also the cheapest way to exercise the hook. Worth doing before phase 5 leans on any of them.
+
 ### Project-level criteria
 
 These are re-run at the end of every phase, not just at the end.
