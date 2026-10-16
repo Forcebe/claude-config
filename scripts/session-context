@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# SessionStart hook: tell a new session what else is already in flight on this
+# repo, so two worktrees don't pick up the same work.
+#
+# Runs on every session everywhere, so it stays silent unless it has something
+# worth saying, and never fails the session it is starting.
+set -uo pipefail
+
+cw="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)/cw"
+
+git rev-parse --git-dir >/dev/null 2>&1 || exit 0
+here=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+
+status=$("$cw" status 2>/dev/null) || exit 0
+rows=$(tail -n +2 <<<"$status")
+
+others=$(grep -vF "$(basename "$here")" <<<"$rows" || true)
+claims=$(awk 'NF && $4 != "-" {print}' <<<"$rows" || true)
+
+# One worktree and nothing claimed is the ordinary case and needs no preamble.
+[[ -z "$others" && -z "$claims" ]] && exit 0
+
+body="Other work is in flight on this repository. You are in $(basename "$here").
+
+$status
+
+A ticket claimed by another worktree is being worked by another session: leave it alone. Claim before starting with \`cw claim <run> <ticket>\`, and take only what \`cw frontier <run>\` offers."
+
+python3 -c '
+import json, sys
+print(json.dumps({"hookSpecificOutput": {
+    "hookEventName": "SessionStart",
+    "additionalContext": sys.stdin.read(),
+}}))
+' <<<"$body" 2>/dev/null || exit 0

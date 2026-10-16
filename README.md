@@ -42,7 +42,14 @@ Custom [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills. Sym
 cw            # domain docs: .agents/workspace/ in-repo, or the sidecar
 cw --state    # run state, in the shared git dir — same from every worktree
 cw --mode     # "in-repo", "sidecar", or "unconfigured"
+
+cw status                 # every worktree, its branch, tmux session and claims
+cw frontier <run>         # tickets that are open, unblocked and unclaimed
+cw claim <run> <ticket>   # atomic; non-zero exit if someone already holds it
+cw close <run> <ticket>   # mark done, and release
 ```
+
+Flags resolve paths and never write; verbs act on the run graph, whose format is in `docs/run-graph.md`. `scripts/session-context` is the `SessionStart` hook that tells a new session what other worktrees are holding.
 
 The storage mode is not recorded anywhere. It is implied by which `config.md` exists: one in the repo's `.agents/workspace/` means in-repo, one in the sidecar means sidecar, and a sidecar config wins if both exist. `.agents/` itself belongs to whoever owns the repo, so a config sitting directly in it is not our signal; only the nested one is. An in-repo repo therefore needs no sidecar and describes itself wherever it is cloned.
 

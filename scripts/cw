@@ -8,16 +8,25 @@ workspace_root="${CLAUDE_WORKSPACE_ROOT:-$HOME/.claude-workspace}"
 usage() {
 	cat <<'EOF'
 Usage: cw [--state | --sidecar | --repo | --key | --mode]
+       cw status
+       cw frontier <run>
+       cw claim|release|close <run> <ticket>
 
-Resolve where this repository's agent files live.
+Flags resolve paths and never write. Verbs act on the run graph.
 
-  (no args)   Print the docs root: config, GLOSSARY.md and adr/
-  --state     Print the run state root: run graph and claims. Inside .git,
-              so it is shared by every worktree and never committed
-  --sidecar   Print the sidecar path, whether or not it is in use
-  --repo      Print the main worktree root
-  --key       Print the repository key
-  --mode      Print "in-repo", "sidecar", or "unconfigured"
+  (no args)           Print the docs root: config, GLOSSARY.md and adr/
+  --state             Print the run state root: run graph and claims. Inside
+                      .git, so every worktree shares it and it is never committed
+  --sidecar           Print the sidecar path, whether or not it is in use
+  --repo              Print the main worktree root
+  --key               Print the repository key
+  --mode              Print "in-repo", "sidecar", or "unconfigured"
+
+  status              Live worktrees, their branches, tmux sessions and claims
+  frontier <run>      Tickets that are open, unblocked and unclaimed
+  claim <run> <t>     Take a ticket. Fails if someone already holds it
+  release <run> <t>   Give it back
+  close <run> <t>     Mark it done, which also releases it
 
 The storage mode is not recorded anywhere; it is implied by which config.md
 exists. A repo holding .agents/workspace/config.md is in-repo. One whose sidecar
@@ -59,6 +68,7 @@ sidecar="$workspace_root/$key"
 # Tracked docs belong to the branch being worked on, so this is the current
 # worktree rather than the main checkout.
 tree_docs="$(git rev-parse --show-toplevel)/.agents/workspace"
+state="$(cd "$(git rev-parse --git-common-dir)" && pwd -P)/agent-workspace"
 
 # A sidecar config wins over a repo one. The repo is the surface we must never
 # write to by accident, so ambiguity resolves away from it.
@@ -79,22 +89,145 @@ docs_root() {
 	esac
 }
 
-# Run state is repo-wide: if it followed the branch, concurrent worktrees
-# could not see each other's claims. The shared git dir gives that for free,
-# is invisible to `git status`, and can never be committed.
-state_root() {
-	local common
-	common=$(cd "$(git rev-parse --git-common-dir)" && pwd -P)
-	printf '%s\n' "$common/agent-workspace"
+# --- run graph -------------------------------------------------------------
+
+run_dir() {
+	local run="$1" dir="$state/runs/$1"
+	[[ -d "$dir" ]] || {
+		echo "Error: no run '$run' under $state/runs" >&2
+		exit 1
+	}
+	printf '%s' "$dir"
+}
+
+ticket_file() {
+	local dir="$1" id="$2"
+	local f="$dir/tickets/$id.md"
+	[[ -f "$f" ]] || {
+		echo "Error: no ticket '$id' in $dir/tickets" >&2
+		exit 1
+	}
+	printf '%s' "$f"
+}
+
+# Tickets carry a flat `key: value` header so this stays greppable and needs no
+# YAML parser. Values never span lines.
+ticket_field() {
+	sed -n "s/^$2:[[:space:]]*//p" "$1" | head -1
+}
+
+ticket_ids() {
+	local dir="$1"
+	[[ -d "$dir/tickets" ]] || return 0
+	find "$dir/tickets" -name '*.md' -maxdepth 1 | sort | while read -r f; do
+		basename "$f" .md
+	done
+}
+
+claim_holder() {
+	local dir="$1" id="$2"
+	[[ -f "$dir/claims/$id/holder" ]] && cat "$dir/claims/$id/holder" || true
+}
+
+is_claimed() { [[ -d "$1/claims/$2" ]]; }
+
+is_blocked() {
+	local dir="$1" id="$2" blocker
+	for blocker in $(ticket_field "$dir/tickets/$id.md" blocked-by); do
+		[[ -f "$dir/tickets/$blocker.md" ]] || continue
+		[[ "$(ticket_field "$dir/tickets/$blocker.md" status)" == "done" ]] || return 0
+	done
+	return 1
+}
+
+cmd_frontier() {
+	local dir id
+	dir=$(run_dir "$1")
+	for id in $(ticket_ids "$dir"); do
+		[[ "$(ticket_field "$dir/tickets/$id.md" status)" == "open" ]] || continue
+		is_blocked "$dir" "$id" && continue
+		is_claimed "$dir" "$id" && continue
+		printf '%s\n' "$id"
+	done
+}
+
+# mkdir is the lock: it is atomic on every filesystem we care about, so the
+# first of two concurrent worktrees wins and the loser sees a plain failure.
+cmd_claim() {
+	local dir id tree session
+	dir=$(run_dir "$1")
+	id=$(basename "$(ticket_file "$dir" "$2")" .md)
+	mkdir -p "$dir/claims"
+	if ! mkdir "$dir/claims/$id" 2>/dev/null; then
+		echo "Error: '$id' is already claimed by:" >&2
+		claim_holder "$dir" "$id" | sed 's/^/  /' >&2
+		exit 1
+	fi
+	tree=$(git rev-parse --show-toplevel)
+	session=$(basename "$tree" | tr ".,: " "____")
+	cat >"$dir/claims/$id/holder" <<EOF
+branch: $(git rev-parse --abbrev-ref HEAD)
+worktree: $tree
+session: $session
+at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+EOF
+	printf '%s\n' "$id"
+}
+
+cmd_release() {
+	local dir id
+	dir=$(run_dir "$1")
+	id="$2"
+	rm -rf "${dir:?}/claims/${id:?}"
+}
+
+cmd_close() {
+	local dir id f
+	dir=$(run_dir "$1")
+	f=$(ticket_file "$dir" "$2")
+	id=$(basename "$f" .md)
+	# BSD and GNU sed disagree about -i, so rewrite through a temp file.
+	sed 's/^status:.*/status: done/' "$f" >"$f.tmp" && mv "$f.tmp" "$f"
+	rm -rf "${dir:?}/claims/${id:?}"
+}
+
+# Everything here is derived live, so a killed session or a removed worktree
+# disappears from the output without anything needing to be cleaned up.
+cmd_status() {
+	local tree branch session claims
+	printf '%-44s %-34s %-9s %s\n' WORKTREE BRANCH SESSION CLAIMS
+	git worktree list --porcelain | sed -n 's/^worktree //p' | while read -r tree; do
+		[[ -d "$tree" ]] || continue
+		branch=$(git -C "$tree" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')
+		session=$(basename "$tree" | tr ".,: " "____")
+		if tmux has-session -t "$session" 2>/dev/null; then session=live; else session=-; fi
+		claims=$(claims_for "$tree")
+		printf '%-44s %-34s %-9s %s\n' "$(basename "$tree")" "$branch" "$session" "${claims:--}"
+	done
+}
+
+claims_for() {
+	local tree="$1" holder out=""
+	[[ -d "$state/runs" ]] || return 0
+	while IFS= read -r holder; do
+		grep -qxF "worktree: $tree" "$holder" || continue
+		out+="$(basename "$(dirname "$(dirname "$(dirname "$holder")")")")/$(basename "$(dirname "$holder")") "
+	done < <(find "$state/runs" -name holder -type f 2>/dev/null)
+	printf '%s' "${out% }"
 }
 
 case "${1:-}" in
 "") docs_root ;;
---state) state_root ;;
+--state) printf '%s\n' "$state" ;;
 --sidecar) printf '%s\n' "$sidecar" ;;
 --repo) printf '%s\n' "$main_dir" ;;
 --key) printf '%s\n' "$key" ;;
 --mode) mode && echo ;;
+status) cmd_status ;;
+frontier) [[ $# -eq 2 ]] || usage; cmd_frontier "$2" ;;
+claim) [[ $# -eq 3 ]] || usage; cmd_claim "$2" "$3" ;;
+release) [[ $# -eq 3 ]] || usage; cmd_release "$2" "$3" ;;
+close) [[ $# -eq 3 ]] || usage; cmd_close "$2" "$3" ;;
 -h | --help) usage ;;
 *)
 	echo "Error: unknown option '$1'" >&2

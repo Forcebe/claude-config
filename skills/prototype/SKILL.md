@@ -23,8 +23,12 @@ The two branches produce very different artifacts — getting this wrong wastes 
 3. **No persistence by default.** State lives in memory. Persistence is the thing the prototype is _checking_, not something it should depend on. If the question explicitly involves a database, hit a scratch DB or a local file with a clear "PROTOTYPE — wipe me" name.
 4. **Skip the polish.** No tests, no error handling beyond what makes the prototype _runnable_, no abstractions. The point is to learn something fast and then delete it.
 5. **Surface the state.** After every action (logic) or on every variant switch (UI), print or render the full relevant state so the user can see what changed.
-6. **Delete or absorb when done.** When the prototype has answered its question, either delete it or fold the validated decision into the real code — don't leave it rotting in the repo.
+6. **Keep it as a primary source, don't leave it in the way.** Fold the validated decision into the real code, then park the prototype itself on a local `prototype/<name>` branch, out of the working branch.
 
 ## When done
 
-The _answer_ is the only thing worth keeping from a prototype. Capture it somewhere durable (commit message, ADR, issue, or a `NOTES.md` next to the prototype) along with the question it was answering. If the user is around, that capture is a quick conversation; if not, leave the placeholder so they (or you, on the next pass) can fill in the verdict before deleting the prototype.
+Two things come out of a prototype: the **answer** and the **artifact**.
+
+The answer is what matters. Record it — the verdict and the question it settled — in the run's ticket if there is one, otherwise in an ADR or the commit message. If the user is around, that capture is a quick conversation; if not, leave the placeholder for them to fill in.
+
+The artifact is worth keeping as a primary source, but it is not worth pushing. Commit it to a local `prototype/<name>` branch and **do not push it**: on a shared repo that branch is noise for everyone else, and the constraint is that a shared repo gains nothing from this workflow. Leave the pointer where the work lives — the ticket under `$(cw --state)/runs/<run>/tickets/`, naming the branch — so the next session can find it without the branch being visible to the team.

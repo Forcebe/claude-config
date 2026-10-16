@@ -38,7 +38,7 @@ Agent files live in one of three places, and `cw` is the only thing that needs t
 
 **The sidecar**, at `~/.claude-workspace/<owner>--<repo>`, holds domain docs for repos in sidecar mode and nothing otherwise. `cw` derives the key from `git remote get-url origin`, which every worktree shares.
 
-`cw` is a pure resolver: it prints paths and creates nothing.
+`cw`'s **flags resolve and never write**; its **verbs** (`status`, `frontier`, `claim`, `release`, `close`) act on the run graph. The split is deliberate: path resolution is used everywhere and must stay side-effect free.
 
 ### Storage mode
 
@@ -87,9 +87,11 @@ This is a change to current behaviour: today's `to-spec` and `to-tickets` apply 
 
 Because run state lives in the shared git directory, every worktree of a repo already resolves to the same one, which makes it the natural coordination point.
 
-Each ticket file records `status`, `blocked-by`, and `claim` — branch, worktree path, and tmux session. Claims are write-once using an atomic `mkdir` lock, so the first writer wins and a ticket claimed by another worktree is visibly claimed. One file per ticket means concurrent writes to different tickets never collide. That is the whole concurrency mechanism; there is no lock manager.
+Each ticket file records `status`, `blocked-by`, `branch` and `stack-parent`. A **claim is a directory**, not a field, because `mkdir` is atomic and a field is not: two worktrees racing both call `mkdir`, exactly one succeeds, and the winner writes a `holder` file naming its branch, worktree and session. A field would need read-modify-write, which has no atomic form in a shell script, and both racers would believe they had won. One file per ticket means concurrent writes to different tickets never collide. That is the whole mechanism; there is no lock manager.
 
-`cw --status` enumerates live worktrees, their branches, their tmux sessions, and their claimed tickets. It is computed from `git worktree list`, `tmux list-sessions`, and the claim fields rather than stored, so it cannot go stale.
+`cw status` enumerates live worktrees, their branches, their tmux sessions, and their claimed tickets. It is computed from `git worktree list`, `tmux has-session` and the claim directories rather than stored, so it cannot go stale.
+
+The format is specified in [run-graph.md](run-graph.md).
 
 A `SessionStart` hook injects that summary into every new agent session in the repository, so an agent starts knowing what else is in flight and what is already claimed.
 
@@ -153,7 +155,7 @@ Adding it as a personal skill would recreate the duplicate-name and conflicting-
 
 Criteria marked **[tmrw]** cannot be validated in this repository and need a `~/tmrw` repo.
 
-**Phase 1 is complete.** Its automated criteria live in `tests/phase-1.sh`; the tmux, worktree and shared-repo ones are the manual checklist that script prints, and all of them have been run, the last against `tmrw-core-api`.
+**Phases 1 and 2 are complete.** Their automated criteria live in `tests/phase-1.sh` and `tests/phase-2.sh`; phase 1's tmux, worktree and shared-repo criteria are the manual checklist its script prints, and all have been run, the last against `tmrw-core-api`.
 
 ### Phase 1 — Foundation
 
@@ -179,7 +181,8 @@ Task graph format, claims, frontier, `cw --status`, `SessionStart` hook.
 - A run with three tickets and a blocking chain exposes exactly one frontier ticket.
 - Claiming from worktree A succeeds; claiming the same ticket from worktree B fails.
 - Closing a blocker moves the next ticket onto the frontier.
-- `cw --status` lists live worktrees, branches, sessions, and claims; killing a tmux session removes it from the output, which proves the output is computed rather than stored.
+- `cw status` lists live worktrees, branches, sessions, and claims; killing a tmux session removes it from the output, which proves the output is computed rather than stored.
+- `cw close` on a blocker releases its claim as well as marking it done.
 - Opening a session in worktree B surfaces worktree A's branch and claimed ticket in context.
 - `handoff` writes into the workspace rather than `mktemp`, names the skills the next agent should call, and redacts secrets.
 - A `prototype` run leaves its branch local and its pointer in the run graph, and pushes nothing.
