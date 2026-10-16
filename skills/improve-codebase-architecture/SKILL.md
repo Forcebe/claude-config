@@ -1,6 +1,7 @@
 ---
 name: improve-codebase-architecture
-description: This skill should be used when the user asks to "improve architecture", "find refactoring opportunities", "consolidate modules", "deepen shallow modules", "make codebase more testable", or wants to explore a codebase for architectural improvements and module-deepening refactors.
+description: Explore a codebase for architectural friction and module-deepening refactors.
+disable-model-invocation: true
 ---
 
 # Improve Codebase Architecture

@@ -1,10 +1,15 @@
 ---
 name: grill-me
-description: This skill should be used when the user asks to "grill me", "stress-test my plan", "poke holes in this", "challenge my design", "review my approach", or wants relentless questioning about a plan or design until reaching shared understanding.
+description: Stress-test a plan, design or idea by relentless interview, saving nothing.
+disable-model-invocation: true
 ---
 
-Interview the user relentlessly about every aspect of the plan until reaching a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide a recommended answer.
+# Grill Me
 
-Ask questions one at a time.
+The interview on its own, stateless. Nothing is written down.
 
-If a question can be answered by exploring the codebase, explore the codebase instead of asking.
+Call the Skill tool with "grilling".
+
+Reach for this when there is **no repository under the work** — a plan, a piece of writing, a decision with no codebase attached. In a repository, use `/grill-with-docs` instead: it runs the same interview and leaves the glossary and ADRs behind, which makes it strictly the better of the two whenever there is somewhere to put them.
+
+For the Linear issue on the current branch, use `/grill-issue`, which loads the issue and its PRD first.

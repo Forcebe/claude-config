@@ -1,6 +1,7 @@
 ---
 name: apply-review
-description: Writer side of the self-review loop. Reads the review thread on the current branch, verifies each open finding against the current code, then fixes it / disputes it with a reason / marks it stale, runs validation, and updates the thread. Use when asked to "apply the review", "pick up the handoff", "respond to the review findings", "address the review thread", or "fix the review". Do NOT use to produce the review in the first place — use self-review or code-review. Do NOT use to drive the whole negotiation — use review-loop.
+description: Writer side of that thread: fix, dispute or mark stale, then hand back.
+disable-model-invocation: true
 ---
 
 # Apply Review (writer side)

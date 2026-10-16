@@ -4,31 +4,37 @@ Custom [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills. Sym
 
 ## Skills
 
-### Workspace
+Skills split on one axis: **who can reach them.** A user-invoked skill is reachable only by typing its name, and — the invariant everything else rests on — can never be called by another skill. Model-invoked skills are the ones skills call via the Skill tool, so anything another skill depends on has to stay model-invoked.
+
+### User-invoked
+
+Entry points. Type them; nothing else can.
 
 - **setup-workspace** — Configure a repo's agent workspace: storage mode, issue tracker, domain doc layout. Run once per repo.
+- **grill-with-docs** — Stress-test a plan by interview, building the glossary and ADRs as decisions land. The one to use in a repository.
+- **grill-me** — The same interview, stateless. For when there is no repo under the work.
+- **grill-issue** — The same, anchored to the Linear issue on the current branch and its PRD.
+- **to-spec** — Synthesize a spec from the conversation, codebase exploration, and test-seam design.
+- **to-tickets** — Break a spec into tracer-bullet tickets, each declaring its blocking edges.
+- **improve-codebase-architecture** — Explore a codebase for module-deepening refactors.
+- **handoff** — Compact the conversation into a handoff document for another agent to pick up.
+- **self-review** — Reviewer side of a writer↔reviewer thread on your own branch.
+- **apply-review** — Writer side of that thread: fix, dispute, or mark stale, then hand back.
 
-### Review
+### Model-invoked
 
-- **code-review** — Multi-agent review that runs specialist agents over a diff, then proves or refutes their falsifiable findings by running tests and API calls
-- **self-review** — Reviewer side of a writer↔reviewer negotiation thread on your own branch
-- **apply-review** — Writer side of that thread: fix, dispute, or mark stale, then hand back
-- **review-loop** — Runs the whole writer↔reviewer negotiation automatically in the chat that wrote the code, then reports what changed
+Primitives and references. Skills call these; so can you.
 
-### Planning
+- **grilling** — The interview technique itself: a design tree worked in rounds, recommended answer on every question, facts found rather than asked.
+- **domain-modeling** — Build and sharpen the project's domain model, writing `GLOSSARY.md` and ADRs as terms and decisions resolve.
+- **research** — Delegate reading to a background agent, which cites primary sources and leaves a Markdown file in the workspace.
+- **tdd** — Test-driven development with the red-green-refactor loop.
+- **prototype** — Build a throwaway prototype to answer a design question.
+- **gh-stack** — Manage stacked branches and PRs with the gh-stack CLI extension.
+- **code-review** — Multi-agent review over a diff, proving or refuting findings by running tests and API calls.
+- **review-loop** — The whole writer↔reviewer negotiation, in the chat that wrote the code.
 
-- **grill-me** — Interview the user relentlessly about a plan or design until reaching shared understanding
-- **grill-issue** — The same, anchored to the Linear issue on the current branch
-- **to-spec** — Synthesize a spec/PRD from the conversation, codebase exploration, and test-seam design
-- **to-tickets** — Break a spec/PRD into independently-grabbable Linear issues as tracer-bullet vertical slices
-- **prototype** — Build a throwaway prototype to flesh out a design before committing to it
-
-### Building
-
-- **tdd** — Test-driven development with red-green-refactor loop
-- **improve-codebase-architecture** — Explore a codebase for architectural improvements, focusing on deepening shallow modules
-- **gh-stack** — Manage stacked branches and PRs with the gh-stack CLI extension
-- **handoff** — Compact the conversation into a handoff document for another agent to pick up
+On the work layer `code-review` and `review-loop` come from the `tmrw-standards` plugin instead, and this repo's copies are not deployed; see Setup.
 
 ## Agents
 

@@ -157,7 +157,7 @@ Adding it as a personal skill would recreate the duplicate-name and conflicting-
 
 Criteria marked **[tmrw]** cannot be validated in this repository and need a `~/tmrw` repo.
 
-**Phases 1 and 2 are complete.** Their automated criteria live in `tests/phase-1.sh` and `tests/phase-2.sh`; phase 1's tmux, worktree and shared-repo criteria are the manual checklist its script prints, and all have been run, the last against `tmrw-core-api`.
+**Phases 1, 2 and 3 are complete.** Their automated criteria live in `tests/phase-1.sh`, `tests/phase-2.sh` and `tests/phase-3.sh`; phase 1's tmux, worktree and shared-repo criteria are the manual checklist its script prints, and all have been run, the last against `tmrw-core-api`.
 
 ### Phase 1 — Foundation
 

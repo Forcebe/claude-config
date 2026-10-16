@@ -1,6 +1,7 @@
 ---
 name: self-review
-description: Reviewer side of a writer↔reviewer self-review loop on your own branch. Seeds a stateful review thread from a multi-agent review, and later adjudicates the writer's responses (accepting fixes/pushback or rebutting further). Use ONLY when explicitly asked to "self-review", "start a review thread", "seed a review thread", "adjudicate the responses", or "continue the review thread". Do NOT use for one-shot reviews or reviewing other people's PRs — use code-review. Do NOT use to run the negotiation automatically — use review-loop.
+description: Reviewer side of a writer-reviewer review thread on your own branch.
+disable-model-invocation: true
 ---
 
 # Self-Review (reviewer side)

@@ -1,6 +1,7 @@
 ---
 name: to-spec
-description: This skill should be used when the user asks to "write a PRD", "write a spec", "create a product requirements document", "plan a new feature", "write up requirements", or wants to produce a spec by synthesizing the current conversation, exploring the codebase, and designing test seams.
+description: Synthesize a spec from the current conversation and codebase, and publish it.
+disable-model-invocation: true
 ---
 
 # To Spec

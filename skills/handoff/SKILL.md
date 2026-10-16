@@ -1,6 +1,7 @@
 ---
 name: handoff
-description: Compact the current conversation into a handoff document for another agent to pick up. Use when the user asks to "hand off", "create a handoff", "summarize this for the next session", "write up where we are", or wants to transfer in-progress work to a fresh session.
+description: Compact the current conversation into a handoff document for another agent to pick up.
+disable-model-invocation: true
 argument-hint: "What will the next session be used for?"
 ---
 

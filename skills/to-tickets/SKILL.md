@@ -1,6 +1,7 @@
 ---
 name: to-tickets
-description: This skill should be used when the user asks to "convert PRD to issues", "break down a PRD", "create implementation tickets", "create tickets", "create issues from PRD", "turn this PRD into work items", or wants to split a PRD, spec, or conversation into independently-grabbable Linear issues using vertical slices, each declaring its blocking edges.
+description: Break a spec, plan or conversation into tracer-bullet tickets, each declaring its blocking edges.
+disable-model-invocation: true
 ---
 
 # To Tickets
