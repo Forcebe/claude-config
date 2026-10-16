@@ -14,7 +14,9 @@ here=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
 status=$("$cw" status 2>/dev/null) || exit 0
 rows=$(tail -n +2 <<<"$status")
 
-others=$(grep -vF "$(basename "$here")" <<<"$rows" || true)
+# A main checkout's basename is a prefix of every sibling worktree's, so this
+# has to compare the whole field, not search for a substring.
+others=$(awk -v me="$(basename "$here")" '$1 != me' <<<"$rows" || true)
 claims=$(awk 'NF && $4 != "-" {print}' <<<"$rows" || true)
 
 # One worktree and nothing claimed is the ordinary case and needs no preamble.

@@ -113,7 +113,7 @@ ticket_file() {
 # Tickets carry a flat `key: value` header so this stays greppable and needs no
 # YAML parser. Values never span lines.
 ticket_field() {
-	sed -n "s/^$2:[[:space:]]*//p" "$1" | head -1
+	sed -n '/^---$/,/^---$/p' "$1" | sed -n "s/^$2:[[:space:]]*//p" | head -1
 }
 
 ticket_ids() {
@@ -122,6 +122,13 @@ ticket_ids() {
 	find "$dir/tickets" -name '*.md' -maxdepth 1 | sort | while read -r f; do
 		basename "$f" .md
 	done
+}
+
+valid_id() {
+	[[ "$1" =~ ^[A-Za-z0-9._-]+$ ]] || {
+		echo "Error: invalid ticket id '$1'" >&2
+		exit 1
+	}
 }
 
 claim_holder() {
@@ -177,6 +184,7 @@ EOF
 cmd_release() {
 	local dir id
 	dir=$(run_dir "$1")
+	valid_id "$2"
 	id="$2"
 	rm -rf "${dir:?}/claims/${id:?}"
 }
@@ -193,16 +201,25 @@ cmd_close() {
 
 # Everything here is derived live, so a killed session or a removed worktree
 # disappears from the output without anything needing to be cleaned up.
+live_worktrees() {
+	git worktree list --porcelain | awk '
+		/^worktree /  { wt = substr($0, 10); dead = 0 }
+		/^prunable/   { dead = 1 }
+		/^$/          { if (wt != "" && !dead) print wt; wt = "" }
+		END           { if (wt != "" && !dead) print wt }
+	'
+}
+
 cmd_status() {
 	local tree branch session claims
-	printf '%-44s %-34s %-9s %s\n' WORKTREE BRANCH SESSION CLAIMS
-	git worktree list --porcelain | sed -n 's/^worktree //p' | while read -r tree; do
+	printf '%-38s %-46s %-9s %s\n' WORKTREE BRANCH SESSION CLAIMS
+	live_worktrees | while read -r tree; do
 		[[ -d "$tree" ]] || continue
 		branch=$(git -C "$tree" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')
 		session=$(basename "$tree" | tr ".,: " "____")
 		if tmux has-session -t "$session" 2>/dev/null; then session=live; else session=-; fi
 		claims=$(claims_for "$tree")
-		printf '%-44s %-34s %-9s %s\n' "$(basename "$tree")" "$branch" "$session" "${claims:--}"
+		printf '%-38s %-46s %-9s %s\n' "$(basename "$tree")" "$branch" "$session" "${claims:--}"
 	done
 }
 

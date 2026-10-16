@@ -102,6 +102,46 @@ else
 fi
 
 echo
+echo "robustness"
+# A dead registration whose directory still exists: the real-world case is a
+# scratchpad worktree whose session dir was cleaned up underneath it.
+git -C "$repo" worktree add --quiet --detach "$scratch/wt-dead" HEAD 2>/dev/null
+# Removing the worktree's own .git file is what a cleaned-up scratchpad leaves
+# behind: the directory survives, so a bare -d check still admits it, but the
+# registration is dead and its branch reads as "?".
+rm -f "$scratch/wt-dead/.git"
+check "a prunable worktree is not listed" "" \
+	"$(in_repo status | awk '$1 == "wt-dead" {print $1}')"
+
+# The header is the contract; prose that happens to look like it is not. The
+# header omits blocked-by, so a whole-file read would pick the body line up and
+# wrongly treat this ticket as blocked by one that is still open.
+printf -- '---\nstatus: open\n---\n\nNotes on what this supersedes:\n\nblocked-by: 03-third\n' \
+	>"$run/tickets/04-prose.md"
+check "a body line is not read as a header field" "1" \
+	"$(in_repo frontier demo | grep -c 04-prose)"
+
+in_repo release demo "../../../etc" >/dev/null 2>&1
+check "release rejects a traversing ticket id" "1" "$?"
+check "release left the run directory intact" "yes" \
+	"$([[ -d "$run/tickets" ]] && echo yes || echo no)"
+
+# A main checkout's basename is a prefix of every sibling's, so a substring
+# filter would drop exactly the worktrees the hook exists to report. Tested in
+# a repo with no claims at all, because it is the emptiness of that set, not
+# the table it prints, that decides whether the hook speaks.
+quiet="$scratch/quiet"
+mkdir -p "$quiet"
+git -C "$quiet" init --quiet
+git -C "$quiet" remote add origin git@github.com:acme/quiet.git
+git -C "$quiet" commit --quiet --allow-empty -m init
+check "a lone worktree keeps the hook silent" "" \
+	"$(cd "$quiet" && "$(dirname "$cw")/session-context")"
+git -C "$quiet" worktree add --quiet -b sibling "$scratch/quiet--sibling" 2>/dev/null
+check "a sibling whose name extends ours makes it speak" "yes" \
+	"$(cd "$quiet" && "$(dirname "$cw")/session-context" | grep -q 'quiet--sibling' && echo yes || echo no)"
+
+echo
 echo "session context hook"
 ctx=$(cd "$scratch/wt-a" && "$(dirname "$cw")/session-context")
 check "names the other worktree's branch" "yes" \

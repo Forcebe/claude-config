@@ -51,7 +51,9 @@ What this slice makes work, end to end, from the user's point of view.
 - [ ] ...
 ```
 
-The header is flat `key: value` lines, never nested, so it stays greppable and needs no YAML parser.
+The header is flat `key: value` lines, never nested, so it stays greppable and needs no YAML parser. **Only the block between the two `---` fences is read**, so prose in the body that happens to start with `status:` or `blocked-by:` is just prose.
+
+A ticket id is its filename stem and must match `[A-Za-z0-9._-]+`. Operations that delete reject anything else rather than letting a path escape the run directory.
 
 - **status**: `open` or `done`.
 - **blocked-by**: space-separated ticket ids, or empty. A ticket is unblocked when every blocker is `done`.
@@ -77,6 +79,8 @@ cw status                      # every worktree, its branch, session and claims
 ```
 
 `cw status` is computed from `git worktree list`, `tmux has-session` and the claim directories every time it runs. Nothing caches it, so a killed session or a removed worktree disappears on its own and there is no stale state to clean up.
+
+It lists only **live** worktrees. Git keeps registrations for worktrees whose directory or `.git` file has gone — a cleaned-up scratchpad leaves one behind — and marks them `prunable`. Those are dead, so they are filtered out rather than reported with an unreadable branch. `git worktree prune` clears the registrations themselves, and only ever touches dead ones.
 
 ## Working a run
 

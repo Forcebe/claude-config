@@ -89,7 +89,7 @@ Because run state lives in the shared git directory, every worktree of a repo al
 
 Each ticket file records `status`, `blocked-by`, `branch` and `stack-parent`. A **claim is a directory**, not a field, because `mkdir` is atomic and a field is not: two worktrees racing both call `mkdir`, exactly one succeeds, and the winner writes a `holder` file naming its branch, worktree and session. A field would need read-modify-write, which has no atomic form in a shell script, and both racers would believe they had won. One file per ticket means concurrent writes to different tickets never collide. That is the whole mechanism; there is no lock manager.
 
-`cw status` enumerates live worktrees, their branches, their tmux sessions, and their claimed tickets. It is computed from `git worktree list`, `tmux has-session` and the claim directories rather than stored, so it cannot go stale.
+`cw status` enumerates live worktrees, their branches, their tmux sessions, and their claimed tickets. It is computed from `git worktree list`, `tmux has-session` and the claim directories rather than stored, so it cannot go stale. It skips worktrees git reports as `prunable`, which are registrations whose directory or `.git` file has gone; on a repo that has seen a few agent sessions those outnumber the live ones, and they are noise in a context window.
 
 The format is specified in [run-graph.md](run-graph.md).
 
