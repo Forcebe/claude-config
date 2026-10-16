@@ -115,9 +115,11 @@ Skills that become user-invoked, with `disable-model-invocation: true`: `setup-w
 
 `code-review` and `review-loop` exist twice on a work-layer machine: in `~/.claude/skills` via this repo, and in the `tmrw-standards` plugin, whose copies are forks with cross-references rewritten to `tmrw-standards:`. The plugin is enabled only on the work layer, so the personal copies are the personal-layer fallback and cannot simply be deleted.
 
-Fix: make `dev-env`'s `claude` run script layer-aware, so it skips symlinking the four review skills and the `agents/cr-*` files when `layer=work`.
+Fix: make `dev-env`'s `claude` run script layer-aware, so it skips linking the colliding entries when `layer=work`.
 
-That is harder than it sounds. `dev-env` currently symlinks `skills/` as a **whole directory**, and a directory symlink cannot exclude entries, so the fix needs a real directory of per-entry symlinks, rebuilt on each run so deletions and layer switches propagate. That also moves where Claude Code writes `skills/synced/`: today it lands inside this repo and is gitignored, and afterwards it would land in `~/.claude/skills/`, which is arguably where it belonged anyway.
+The collision is **two** skills, not four: `tmrw-standards` ships `code-review` and `review-loop`, but has no `self-review` or `apply-review`, so skipping all four would have deleted two working skills. All nine `cr-*` agents do come from the plugin, so none of this repo's are linked on the work layer.
+
+A directory symlink cannot exclude entries, so `~/.claude/skills` and `~/.claude/agents` are now real directories of per-entry links, rebuilt on each run. The rebuild removes only links pointing into this repo, so anything else kept there survives, and a deleted skill or a layer switch leaves no orphan. It also moved where Claude Code writes `skills/synced/`: out of this repo, where it only lived because the whole directory was the link target, and into `~/.claude/skills/`.
 
 ## Skills
 
