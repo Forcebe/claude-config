@@ -6,17 +6,21 @@ disable-model-invocation: true
 
 # To Tickets
 
-Break a PRD, plan, or the current conversation into independently-grabbable Linear issues — tracer-bullet vertical slices, each declaring the issues that **block** it.
+Break a spec, plan, or the current conversation into independently-grabbable **tickets** in the run graph — tracer-bullet vertical slices, each declaring the tickets that **block** it.
+
+The tickets go in the run graph under `$(cw --state)/runs/`, never on Linear. The template at the end of this file is the format. Linear is the team's record and receives only what would have been created there by hand; publishing is a separate, deliberate act.
 
 ## Process
 
 ### 1. Gather context
 
-Work from whatever is already in the conversation. If the user passes a reference (a PRD file path, a Linear issue URL or ID), fetch it and read its full body and comments.
+Work from whatever is already in the conversation. If the user passes a reference — a run slug, a spec path, a Linear issue id — resolve it and read it in full.
 
-### 2. Ensure a parent Linear issue exists
+### 2. Locate or create the run
 
-Check whether a Linear issue already exists for this PRD (one may have been created via the to-spec skill). If not, create one using the Linear MCP with the PRD title as the issue title and a summary of the problem statement and solution as the body. This issue serves as the parent for all tracer-bullet sub-issues.
+A spec written by `/to-spec` already has a run at `$(cw --state)/runs/<slug>/`. Use it. If there is no run yet, create one: a directory under `$(cw --state)/runs/`, with a `run.md` naming the effort and recording `linear: <id>` if a Linear issue already covers it.
+
+Confirm the slug with the user before writing anything, since every later skill refers to the run by it.
 
 ### 3. Explore the codebase (optional)
 
@@ -56,40 +60,43 @@ Ask the user:
 
 Iterate until the user approves the breakdown.
 
-### 6. Create the Linear sub-issues
+### 6. Write the tickets
 
-For each approved slice, create a Linear issue as a **sub-issue of the parent PRD issue** using the Linear MCP. Use the issue body template below. Apply the team's `ready-for-agent` triage label — the issues are agent-grabbable by construction.
+Write one file per ticket to `$(cw --state)/runs/<slug>/tickets/NN-slug.md`, numbered from `01` in dependency order so that reading the directory reads the intended sequence. Use the template below.
 
-Create issues in dependency order (blockers first) so you can set up relations as you go. For each blocking edge, add a **"blocks"** relation from the blocker to the blocked issue using the Linear MCP — do NOT just mention blockers in the body, so they appear in the sidebar and are enforced by Linear's dependency tracking.
+**Write nothing to Linear.** Not the tickets, not a parent issue, not a label. The run graph holds the whole task graph; Linear holds only what the team would have seen anyway.
 
-Work the **frontier**: any issue whose blockers are all done. For a purely linear chain that means top to bottom. Implement one issue at a time, clearing context between issues.
+Set `blocked-by` to the ids of the blocking tickets, space separated, or leave it empty. Where the graph is a chain, set `stack-parent` too: those tickets become a stack of PRs, and `wt-add <branch> <parent-branch>` takes the parent's branch as its base.
 
-<issue-template>
-## Context
+Then verify with `cw frontier <slug>`: it should list exactly the tickets that can start immediately. If it lists more or fewer than expected, the edges are wrong — fix them before telling the user you are done.
 
-Brief outline of the PRD context. Reference specific sections of the parent PRD rather than duplicating content.
+Report the run slug and the frontier.
+
+<ticket-template>
+---
+status: open
+blocked-by: 01-prefactor-the-thing
+branch:
+stack-parent: 01-prefactor-the-thing
+---
+
+# Add the referral export endpoint
 
 ## What to build
 
-A concise description of this vertical slice. Describe the end-to-end behavior, not layer-by-layer implementation.
+A concise description of this vertical slice: the end-to-end behaviour it makes work, from the user's point of view, not a layer-by-layer implementation list.
 
-Avoid specific file paths or code snippets — they go stale fast. Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it and note briefly that it came from a prototype. Trim to the decision-rich parts.
+Avoid specific file paths or code snippets — they go stale fast. Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (a state machine, a reducer, a schema, a type shape), inline it and note that it came from a prototype. Trim it to the decision-rich part.
 
 ## Acceptance criteria
 
 - [ ] Criterion 1
 - [ ] Criterion 2
-- [ ] Criterion 3
 
-## Blocked by
+## Context
 
-The blocking issues (set as Linear "blocks" relations), or "None — can start immediately".
+Point at the spec rather than restating it: `spec.md`, and the sections that matter. Name the user stories by number.
 
-## User stories addressed
+</ticket-template>
 
-Reference by number from the parent PRD:
-
-- User story 3
-- User story 7
-
-</issue-template>
+`branch` is left empty until the work starts; `implement` fills it in. The header is the contract — only the block between the fences is read, so prose in the body that happens to start with a key is just prose.

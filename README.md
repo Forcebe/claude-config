@@ -14,8 +14,9 @@ Entry points. Type them; nothing else can.
 - **grill-with-docs** — Stress-test a plan by interview, building the glossary and ADRs as decisions land. The one to use in a repository.
 - **grill-me** — The same interview, stateless. For when there is no repo under the work.
 - **grill-issue** — The same, anchored to the Linear issue on the current branch and its PRD.
-- **to-spec** — Synthesize a spec from the conversation, codebase exploration, and test-seam design.
-- **to-tickets** — Break a spec into tracer-bullet tickets, each declaring its blocking edges.
+- **to-spec** — Synthesize a spec from the conversation, codebase exploration, and test-seam design, saved into the run graph.
+- **to-tickets** — Break a spec into tracer-bullet tickets in the run graph, each declaring its blocking edges.
+- **triage** — Take a ticket from raw to agent-ready: verify the claim, grill it into shape, write the brief. States stay local.
 - **improve-codebase-architecture** — Explore a codebase for module-deepening refactors.
 - **handoff** — Compact the conversation into a handoff document for another agent to pick up.
 - **self-review** — Reviewer side of a writer↔reviewer thread on your own branch.

@@ -22,13 +22,19 @@ Sketch out the seams at which the feature will be tested. Prefer existing seams 
 
 Confirm with the user that these seams match their expectations.
 
-### 3. Write the PRD
+### 3. Write the spec
 
-Once the problem and solution are clear, use the template below to write the PRD. Save it as a markdown file in the project root.
+Once the problem and solution are clear, write the spec using the template below.
 
-### 4. Publish to Linear
+Save it to `$(cw --state)/runs/<slug>/spec.md`, creating the run directory, and write a `run.md` beside it naming the effort. **Not the repo root**: on a shared repo nothing of this workflow may be committed, and the run graph is where `to-tickets` and `implement` will look for it. Pick a short kebab-case slug from the title.
 
-Create a Linear issue using the Linear MCP with the PRD title as the issue title and a summary of the problem statement and solution as the body. Apply the team's `ready-for-agent` triage label. Share the issue URL — this issue can later serve as the parent for tracer-bullet sub-issues via the to-tickets skill.
+Tell the user the path and the run slug.
+
+### 4. Publishing to Linear is a separate, deliberate act
+
+**Do not publish anything to Linear as part of this skill.** Linear is the team's record, and a spec that has only just been written is not yet something the team needs.
+
+When the user does ask for it, create one issue carrying the problem statement and solution, and **no workflow labels** — no `ready-for-agent`, no agent metadata of any kind. Record the issue id back in the run's `run.md` as `linear: TMRW-123`, which is the only link between the two layers.
 
 <prd-template>
 
