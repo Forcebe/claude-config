@@ -142,6 +142,18 @@ check "release rejects a traversing ticket id" "1" "$?"
 check "release left the run directory intact" "yes" \
 	"$([[ -d "$run/tickets" ]] && echo yes || echo no)"
 
+# triage adds a header key cw knows nothing about. Unknown keys must be
+# ignored, in any position, and must survive a close rewriting status.
+printf -- '---\ntriage: ready-for-agent\nstatus: open\nblocked-by:\n---\n\n# Triaged\n' \
+	>"$run/tickets/06-triaged.md"
+check "an unknown header key does not hide a ticket" "1" \
+	"$(in_repo frontier demo | grep -c 06-triaged)"
+in_repo close demo 06-triaged
+check "an unknown key survives a close" "ready-for-agent" \
+	"$(sed -n '2s/^triage: //p' "$run/tickets/06-triaged.md")"
+check "close still rewrote status with keys reordered" "done" \
+	"$(sed -n '3s/^status: //p' "$run/tickets/06-triaged.md")"
+
 # A main checkout's basename is a prefix of every sibling's, so a substring
 # filter would drop exactly the worktrees the hook exists to report. Tested in
 # a repo with no claims at all, because it is the emptiness of that set, not

@@ -24,13 +24,13 @@ Confirm the slug with the user before writing anything, since every later skill 
 
 ### 3. Explore the codebase (optional)
 
-If the codebase has not already been explored, do so to understand the current state of the code. Issue titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
+If the codebase has not already been explored, do so to understand the current state of the code. Ticket titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
 
 Look for opportunities to prefactor the code to make the implementation easier. "Make the change easy, then make the easy change." Prefactoring slices come first in the dependency order.
 
 ### 4. Draft vertical slices
 
-Break the work into **tracer bullet** issues.
+Break the work into **tracer bullet** tickets.
 
 <vertical-slice-rules>
 - Each slice cuts a narrow but COMPLETE path through every layer (schema, API, UI, tests) — vertical, NOT a horizontal slice of one layer
@@ -39,24 +39,24 @@ Break the work into **tracer bullet** issues.
 - Any prefactoring should be done first
 </vertical-slice-rules>
 
-Give each issue its **blocking edges** — the other issues that must complete before it can start. An issue with no blockers can start immediately.
+Give each ticket its **blocking edges** — the other tickets that must complete before it can start. An ticket with no blockers can start immediately.
 
-**Wide refactors are the exception to vertical slicing.** A wide refactor is one mechanical change — rename a column, retype a shared symbol — whose blast radius fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own issue blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in an issue blocked by every migrate batch. When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify issue — green is promised only there.
+**Wide refactors are the exception to vertical slicing.** A wide refactor is one mechanical change — rename a column, retype a shared symbol — whose blast radius fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in an ticket blocked by every migrate batch. When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify ticket — green is promised only there.
 
 ### 5. Quiz the user
 
-Present the proposed breakdown as a numbered list. For each issue, show:
+Present the proposed breakdown as a numbered list. For each ticket, show:
 
 - **Title**: short descriptive name
-- **Blocked by**: which other issues (if any) must complete first
-- **What it delivers**: the end-to-end behavior this issue makes work
+- **Blocked by**: which other tickets (if any) must complete first
+- **What it delivers**: the end-to-end behavior this ticket makes work
 - **User stories covered**: which user stories from the PRD this addresses
 
 Ask the user:
 
 - Does the granularity feel right? (too coarse / too fine)
-- Are the blocking edges correct — does each issue only depend on issues that genuinely gate it?
-- Should any issues be merged or split further?
+- Are the blocking edges correct — does each ticket only depend on tickets that genuinely gate it?
+- Should any tickets be merged or split further?
 
 Iterate until the user approves the breakdown.
 

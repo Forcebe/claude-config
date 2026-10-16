@@ -6,15 +6,15 @@ disable-model-invocation: true
 
 # To Spec
 
-Synthesize a PRD from the current conversation and codebase understanding. Do NOT interview the user — just produce the document from what has already been discussed.
+Synthesize a spec from the current conversation and codebase understanding. Do NOT interview the user — just produce the document from what has already been discussed.
 
-If the conversation genuinely lacks the context needed to write the PRD, say so and point the user at grill-me / grill-issue to work the problem out first, rather than launching an interview here.
+If the conversation genuinely lacks the context needed to write the spec, say so and point the user at `/grill-with-docs` or `/grill-issue` to work the problem out first, rather than launching an interview here.
 
 ## Process
 
 ### 1. Explore the codebase
 
-Explore the repo to verify assertions and understand the current state of the code. Use the project's domain glossary vocabulary throughout the PRD, and respect any ADRs in the area you're touching.
+Explore the repo to verify assertions and understand the current state of the code. Use the project's domain glossary vocabulary throughout the spec, and respect any ADRs in the area you're touching.
 
 ### 2. Sketch the test seams
 
@@ -36,7 +36,7 @@ Tell the user the path and the run slug.
 
 When the user does ask for it, create one issue carrying the problem statement and solution, and **no workflow labels** — no `ready-for-agent`, no agent metadata of any kind. Record the issue id back in the run's `run.md` as `linear: TMRW-123`, which is the only link between the two layers.
 
-<prd-template>
+<spec-template>
 
 ## Problem Statement
 
@@ -84,10 +84,10 @@ A list of testing decisions that were made. Include:
 
 ## Out of Scope
 
-A description of the things that are out of scope for this PRD.
+A description of the things that are out of scope for this spec.
 
 ## Further Notes
 
 Any further notes about the feature.
 
-</prd-template>
+</spec-template>

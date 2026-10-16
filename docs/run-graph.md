@@ -49,6 +49,10 @@ What this slice makes work, end to end, from the user's point of view.
 ## Acceptance criteria
 
 - [ ] ...
+
+## Context
+
+Pointers into `spec.md` rather than a copy of it.
 ```
 
 The header is flat `key: value` lines, never nested, so it stays greppable and needs no YAML parser. **Only the first `---` fenced block is read, and only it is ever rewritten**, so prose in the body that happens to start with `status:` or `blocked-by:` is just prose: it is neither read as a field nor edited by `cw close`.
@@ -59,6 +63,9 @@ A ticket id is its filename stem and must match `[A-Za-z0-9._-]+`. Operations th
 - **blocked-by**: space-separated ticket ids, or empty. A ticket is unblocked when every blocker is `done`.
 - **branch**: the branch the work lands on, once one exists.
 - **stack-parent**: the ticket whose branch this one stacks on, when the graph is a chain. `wt-add <branch> <parent-branch>` takes it as the base ref.
+- **triage**: `needs-info`, `ready-for-agent`, `ready-for-human` or `wontfix`, set by `/triage`. Absent means untriaged, which is the normal state for a ticket `/to-tickets` wrote: those are agent-ready by construction. This key never reaches Linear.
+
+Unknown keys are ignored rather than rejected, so a ticket can carry notes for a skill that other skills do not need to understand.
 
 ## Claims
 
