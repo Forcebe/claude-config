@@ -59,7 +59,7 @@ The sidecar lives at `~/.claude-workspace`, overridable with `CLAUDE_WORKSPACE_R
 ```sh
 ln -s ~/personal/claude-config/skills ~/.claude/skills
 ln -s ~/personal/claude-config/agents ~/.claude/agents
-ln -s ~/personal/claude-config/scripts/cw ~/.local/scripts/cw
+ln -s ~/personal/claude-config/scripts/cw ~/.local/bin/cw
 ```
 
 `dev-env`'s `claude` run script does all three.
