@@ -109,6 +109,13 @@ cat <<'EOF'
   [ ] env -u TMUX wt-add <branch> does the same, failing only at the attach
   [ ] wt-rm removes both worktrees and sessions, and a file written under
       cw --state survives
+
+  [tmrw] On a shared repo, after writing the three config files to the
+  sidecar:
+  [ ] cw --mode reports sidecar from the main checkout and from every
+      live worktree, all resolving to the same sidecar path
+  [ ] cw --state resolves to the main checkout's .git from every worktree
+  [ ] git status is byte-identical to the baseline taken before setup
 EOF
 
 echo
