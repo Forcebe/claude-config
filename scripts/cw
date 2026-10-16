@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# The sidecar lives outside ~/.claude so Claude Code's own cleanup and backup
+# routines never touch it. Overridable so the test suite can run in isolation.
+workspace_root="${CLAUDE_WORKSPACE_ROOT:-$HOME/.claude-workspace}"
+
+usage() {
+	cat <<'EOF'
+Usage: cw [--state | --sidecar | --repo | --key | --mode]
+
+Resolve where this repository's agent files live.
+
+  (no args)   Print the docs root: config, GLOSSARY.md and adr/
+  --state     Print the run state root: run graph and claims. Inside .git,
+              so it is shared by every worktree and never committed
+  --sidecar   Print the sidecar path, whether or not it is in use
+  --repo      Print the main worktree root
+  --key       Print the repository key
+  --mode      Print "in-repo", "sidecar", or "unconfigured"
+
+The storage mode is not recorded anywhere; it is implied by which config.md
+exists. A repo holding .agents/config.md is in-repo. A repo whose sidecar
+holds config.md is sidecar. Neither, and it is unconfigured, which resolves
+as sidecar so that an unconfigured repo is never written into.
+
+Run from inside any git repository.
+EOF
+	exit 1
+}
+
+# The first entry of `git worktree list` is always the main worktree, so this
+# resolves to the same path whether we are called from the main checkout or
+# from any of its worktrees.
+main_dir=$(git worktree list --porcelain 2>/dev/null | head -1 | sed 's/^worktree //' || true)
+if [[ -z "$main_dir" ]]; then
+	echo "Error: not inside a git repository" >&2
+	exit 1
+fi
+
+# origin is shared by every worktree, which is what makes the key stable.
+# Reduce both scp-style and URL-style remotes to "<owner>--<repo>".
+repo_key() {
+	local url key=""
+	url=$(git remote get-url origin 2>/dev/null || true)
+	if [[ -n "$url" ]]; then
+		key=$(printf '%s' "$url" |
+			sed -e 's/\.git$//' -e 's#^[a-z+]*://##' -e 's/^[^@/]*@//' -e 's/:/\//' |
+			awk -F/ '{ if (NF >= 2) printf "%s--%s", $(NF-1), $NF; else printf "%s", $NF }')
+	fi
+	if [[ -z "$key" ]]; then
+		key=$(basename "$main_dir")
+	fi
+	printf '%s' "$key" | tr -c 'A-Za-z0-9._-' '-'
+}
+
+key=$(repo_key)
+sidecar="$workspace_root/$key"
+# Tracked docs belong to the branch being worked on, so this is the current
+# worktree rather than the main checkout.
+tree_docs="$(git rev-parse --show-toplevel)/.agents"
+
+# A sidecar config wins over a repo one. The repo is the surface we must never
+# write to by accident, so ambiguity resolves away from it.
+mode() {
+	if [[ -f "$sidecar/config.md" ]]; then
+		printf 'sidecar'
+	elif [[ -f "$tree_docs/config.md" ]]; then
+		printf 'in-repo'
+	else
+		printf 'unconfigured'
+	fi
+}
+
+docs_root() {
+	case "$(mode)" in
+	in-repo) printf '%s\n' "$tree_docs" ;;
+	*) printf '%s\n' "$sidecar" ;;
+	esac
+}
+
+# Run state is repo-wide: if it followed the branch, concurrent worktrees
+# could not see each other's claims. The shared git dir gives that for free,
+# is invisible to `git status`, and can never be committed.
+state_root() {
+	local common
+	common=$(cd "$(git rev-parse --git-common-dir)" && pwd -P)
+	printf '%s\n' "$common/agent-workspace"
+}
+
+case "${1:-}" in
+"") docs_root ;;
+--state) state_root ;;
+--sidecar) printf '%s\n' "$sidecar" ;;
+--repo) printf '%s\n' "$main_dir" ;;
+--key) printf '%s\n' "$key" ;;
+--mode) mode && echo ;;
+-h | --help) usage ;;
+*)
+	echo "Error: unknown option '$1'" >&2
+	usage
+	;;
+esac
