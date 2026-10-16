@@ -105,7 +105,7 @@ A linear chain of blocking edges is a stack, and `to-tickets` marks chains as su
 
 Matt's split between model-invoked and user-invoked skills rests on one invariant: **a user-invoked skill can never be called by another skill.** That invariant, plus the call graph, determines which side each skill lands on.
 
-Skills that must stay model-invoked, because other skills call them via the Skill tool: `grilling`, `domain-modeling`, `tdd`, `prototype`, `research`, `review-loop`, `code-review`, and the `tmrw-standards` plugin's `commit` and `create-pr`.
+Skills that must stay model-invoked, because other skills call them via the Skill tool: `grilling`, `domain-modeling`, `codebase-design`, `tdd`, `prototype`, `research`, `review-loop`, `code-review`, and the `tmrw-standards` plugin's `commit` and `create-pr`. `codebase-design` belongs here because `tdd` and `improve-codebase-architecture` both reach it that way.
 
 Skills that become user-invoked, with `disable-model-invocation: true`: `setup-workspace`, `grill-me`, `grill-issue`, `grill-with-docs`, `to-spec`, `to-tickets`, `triage`, `implement`, `implement-spec`, `wayfinder`, `handoff`, `improve-codebase-architecture`, `self-review`, `apply-review`, `retro`, `diagnosing-bugs`, `wizard`.
 
@@ -114,6 +114,8 @@ Skills that become user-invoked, with `disable-model-invocation: true`: `setup-w
 `code-review` and `review-loop` exist twice on a work-layer machine: in `~/.claude/skills` via this repo, and in the `tmrw-standards` plugin, whose copies are forks with cross-references rewritten to `tmrw-standards:`. The plugin is enabled only on the work layer, so the personal copies are the personal-layer fallback and cannot simply be deleted.
 
 Fix: make `dev-env`'s `claude` run script layer-aware, so it skips symlinking the four review skills and the `agents/cr-*` files when `layer=work`.
+
+That is harder than it sounds. `dev-env` currently symlinks `skills/` as a **whole directory**, and a directory symlink cannot exclude entries, so the fix needs a real directory of per-entry symlinks, rebuilt on each run so deletions and layer switches propagate. That also moves where Claude Code writes `skills/synced/`: today it lands inside this repo and is gitignored, and afterwards it would land in `~/.claude/skills/`, which is arguably where it belonged anyway.
 
 ## Skills
 
@@ -151,12 +153,13 @@ Adding it as a personal skill would recreate the duplicate-name and conflicting-
 
 Criteria marked **[tmrw]** cannot be validated in this repository and need a `~/tmrw` repo.
 
+**Phase 1 is complete.** Its automated criteria live in `tests/phase-1.sh`; the tmux, worktree and shared-repo ones are the manual checklist that script prints, and all of them have been run, the last against `tmrw-core-api`.
+
 ### Phase 1 — Foundation
 
 `cw` resolver, `wt-add` integration and `--no-attach`, `setup-workspace`.
 
-- `cw` prints an identical path from the main checkout and from two different worktrees of the same repo.
-- `cw` creates the workspace when absent; a second run prints the same path and changes nothing.
+- `cw --sidecar`, `cw --state` and `cw --repo` print identical paths from the main checkout and from two different worktrees of the same repo. Bare `cw` does too under sidecar mode, but is per-worktree under `in-repo`.
 - `cw --mode` reports `unconfigured` before setup, and `cw` resolves to the sidecar, so an unconfigured repo is never written into.
 - A `config.md` in the repo's `.agents/workspace/` makes `cw --mode` report `in-repo`; one in the sidecar makes it report `sidecar`. A `config.md` directly in `.agents/`, which belongs to the repo's owners, is not our signal and leaves the mode `unconfigured`.
 - With both present, `cw --mode` reports `sidecar`, because ambiguity must resolve away from the repo.
@@ -164,7 +167,7 @@ Criteria marked **[tmrw]** cannot be validated in this repository and need a `~/
 - Under `sidecar`, every worktree resolves `cw` to the same path.
 - `cw --state` resolves to the same path from the main checkout and every worktree, and files written there do not appear in `git status`.
 - `cw` outside a git repository exits non-zero with a clear message.
-- `wt-add <branch>` behaves exactly as it does today, and the workspace exists afterwards.
+- `wt-add <branch>` behaves exactly as it does today.
 - `wt-add --no-attach <branch>` creates the worktree and tmux session while leaving the current client attached where it was.
 - `setup-workspace` on this repo writes `.agents/workspace/config.md`, `tracker.md` and `domain.md`, and creates no sidecar.
 - **[tmrw]** `setup-workspace` on a `~/tmrw` repo defaults to sidecar mode, writes nothing inside the repo, and leaves `git status` clean.
@@ -187,6 +190,7 @@ Task graph format, claims, frontier, `cw --status`, `SessionStart` hook.
 - A user-invoked skill does not fire from a casual message that would previously have triggered it.
 - A skill that calls `code-review` still resolves it.
 - **[tmrw]** On the work layer, `code-review` and `review-loop` each resolve to exactly one definition.
+- Deleting a skill from this repo removes it from `~/.claude/skills` on the next deploy, and switching layers does not leave orphans behind.
 
 ### Phase 4 — Spec pipeline
 
