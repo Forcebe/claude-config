@@ -67,16 +67,23 @@ check "sidecar mode resolves to the sidecar" "$sidecar" "$(in_repo)"
 check "sidecar docs are shared across worktrees" "$sidecar" "$(in_wt)"
 
 rm "$sidecar/config.md"
-mkdir -p "$repo/.agents" && echo "# config" >"$repo/.agents/config.md"
+mkdir -p "$repo/.agents/workspace" && echo "# config" >"$repo/.agents/workspace/config.md"
 check "a repo config means in-repo mode" "in-repo" "$(in_repo --mode)"
-check "in-repo mode resolves to .agents" "$repo/.agents" "$(in_repo)"
+check "in-repo mode resolves to .agents/workspace" "$repo/.agents/workspace" "$(in_repo)"
 
-# .agents is tracked content, so a worktree only sees it once it is committed.
-check "an uncommitted .agents does not reach a worktree" "unconfigured" "$(in_wt --mode)"
+# .agents/workspace is tracked content, so a worktree only sees it once committed.
+check "an uncommitted config does not reach a worktree" "unconfigured" "$(in_wt --mode)"
 git -C "$repo" add -A .agents && git -C "$repo" commit --quiet -m "agents"
 git -C "$repo" worktree add --quiet --detach "$scratch/wt-b" HEAD 2>/dev/null
-check "a committed .agents does reach a worktree" "in-repo" "$(cd "$scratch/wt-b" && "$cw" --mode)"
-check "in-repo docs are per-worktree" "$scratch/wt-b/.agents" "$(cd "$scratch/wt-b" && "$cw")"
+check "a committed config does reach a worktree" "in-repo" "$(cd "$scratch/wt-b" && "$cw" --mode)"
+check "in-repo docs are per-worktree" "$scratch/wt-b/.agents/workspace" "$(cd "$scratch/wt-b" && "$cw")"
+
+# .agents belongs to whoever owns the repo, and at TMRW that is the team.
+# Only our own nested config may flip us into the working tree.
+mv "$repo/.agents/workspace/config.md" "$repo/.agents/config.md"
+check "a foreign .agents/config.md is not our signal" "unconfigured" "$(in_repo --mode)"
+mv "$repo/.agents/config.md" "$repo/.agents/workspace/config.md"
+check "our nested config still is" "in-repo" "$(in_repo --mode)"
 
 # The repo is the surface we must never write to by accident, so ambiguity
 # has to resolve away from it.
@@ -104,8 +111,8 @@ cat <<'EOF'
       and leaves the attached client where it was
   [ ] cw --state from inside the new worktree resolves to the main
       checkout's .git/agent-workspace
-  [ ] cw --mode in a new worktree reports unconfigured until .agents/
-      is committed
+  [ ] cw --mode in a new worktree reports unconfigured until
+      .agents/workspace/ is committed
   [ ] env -u TMUX wt-add <branch> does the same, failing only at the attach
   [ ] wt-rm removes both worktrees and sessions, and a file written under
       cw --state survives

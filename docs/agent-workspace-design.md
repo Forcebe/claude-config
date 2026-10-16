@@ -32,7 +32,7 @@ These are the hard rules. Every design decision below follows from one of them.
 
 Agent files live in one of three places, and `cw` is the only thing that needs to know which.
 
-**Domain docs** — `config.md`, `tracker.md`, `domain.md`, `GLOSSARY.md`, `adr/` — live either in the repo at `.agents/` or in a sidecar outside it, depending on the storage mode. `cw` prints the right one.
+**Domain docs** — `config.md`, `tracker.md`, `domain.md`, `GLOSSARY.md`, `adr/` — live either in the repo at `.agents/workspace/` or in a sidecar outside it, depending on the storage mode. `cw` prints the right one.
 
 **Run state** — the run graph, blocking edges, claims — always lives in the shared git directory, at `$(git rev-parse --git-common-dir)/agent-workspace`, which `cw --state` prints. Every worktree of a repo resolves to the same one, it is invisible to `git status`, it cannot be committed, and it needs no key derivation. If it followed the branch instead, two worktrees could not see each other's claims and the coordination below would not work.
 
@@ -50,18 +50,18 @@ Agent files live in one of three places, and `cw` is the only thing that needs t
 
 **The mode is not recorded as a value anywhere. It is implied by which `config.md` exists**, so writing that file to a directory is the act of choosing the mode:
 
-- `.agents/config.md` in the working tree → `in-repo`, and the repo needs no sidecar at all.
+- `.agents/workspace/config.md` in the working tree → `in-repo`, and the repo needs no sidecar at all.
 - `config.md` in the sidecar → `sidecar`.
 - Neither → `unconfigured`, which resolves as the sidecar, so a repo that has never been set up cannot be written into.
 - Both → `sidecar` wins. The repo is the surface that must never be written to by accident, so ambiguity resolves away from it.
 
-The sidecar-wins rule is not hypothetical. `tmrw-core-api` already has a tracked `.agents/` directory holding team-committed skills, so a repo directory this design treats as a mode signal is in real use for something else. Because every `~/tmrw` repo gets a sidecar config, those repos resolve to `sidecar` whatever their `.agents/` contains, and nothing we do can be redirected into a shared working tree by a file the team added.
+The nesting under `.agents/workspace/` is why the signal is safe. `tmrw-core-api` already tracks an `.agents/` directory holding team-committed skills, so `.agents/` is not ours to read: a team that later adopted `.agents/config.md` for its own purposes would, with a flatter layout, have silently put every un-set-up shared repo into `in-repo` mode and invited writes into its working tree. Only a config at our own nested path counts, and nothing the team puts in `.agents/` can redirect us.
 
 An earlier draft kept a `storage:` pointer in the sidecar even for in-repo repos. That was worse in two ways: it split a single decision across two locations, and it meant an in-repo repo could not describe itself — cloned to another machine, it would read as unconfigured until a pointer was recreated. Implying the mode from the file's location makes in-repo configuration portable, which is the entire point of committing it.
 
-Under `in-repo`, `.agents/` is tracked content, so it belongs to the branch being worked on: `cw` resolves to the *current worktree's* `.agents/`, and a glossary entry written while building a feature commits alongside that feature. Two consequences worth accepting knowingly. A glossary entry on a branch that never merges is lost with the branch, where a sidecar entry would persist. And `GLOSSARY.md` becomes a merge-conflict hotspot when several branches add terms at once, in the way a changelog does. One ADR per file avoids the second for decisions, and neither applies to `sidecar`, which is what every shared repo uses.
+Under `in-repo`, `.agents/workspace/` is tracked content, so it belongs to the branch being worked on: `cw` resolves to the *current worktree's* `.agents/workspace/`, and a glossary entry written while building a feature commits alongside that feature. Two consequences worth accepting knowingly. A glossary entry on a branch that never merges is lost with the branch, where a sidecar entry would persist. And `GLOSSARY.md` becomes a merge-conflict hotspot when several branches add terms at once, in the way a changelog does. One ADR per file avoids the second for decisions, and neither applies to `sidecar`, which is what every shared repo uses.
 
-A third consequence is operational rather than a trade-off: a freshly created worktree reads as `unconfigured` until `.agents/` is committed, because an untracked file does not reach a new checkout.
+A third consequence is operational rather than a trade-off: a freshly created worktree reads as `unconfigured` until `.agents/workspace/` is committed, because an untracked file does not reach a new checkout.
 
 Config is split into three files rather than one, along the boundaries of which skill reads what. `config.md` is small and read first. `tracker.md` holds the tracker operations, is the bulk of the content, and varies most between repositories. `domain.md` holds the documentation layout and the rules for consuming it. Triage label strings live in `tracker.md`, because they are tracker-specific.
 
@@ -158,15 +158,15 @@ Criteria marked **[tmrw]** cannot be validated in this repository and need a `~/
 - `cw` prints an identical path from the main checkout and from two different worktrees of the same repo.
 - `cw` creates the workspace when absent; a second run prints the same path and changes nothing.
 - `cw --mode` reports `unconfigured` before setup, and `cw` resolves to the sidecar, so an unconfigured repo is never written into.
-- A `config.md` in the repo's `.agents/` makes `cw --mode` report `in-repo`; one in the sidecar makes it report `sidecar`.
+- A `config.md` in the repo's `.agents/workspace/` makes `cw --mode` report `in-repo`; one in the sidecar makes it report `sidecar`. A `config.md` directly in `.agents/`, which belongs to the repo's owners, is not our signal and leaves the mode `unconfigured`.
 - With both present, `cw --mode` reports `sidecar`, because ambiguity must resolve away from the repo.
-- Under `in-repo`, each worktree resolves `cw` to its own `.agents/`, and a worktree created before `.agents/` was committed reports `unconfigured`.
+- Under `in-repo`, each worktree resolves `cw` to its own `.agents/workspace/`, and a worktree created before it was committed reports `unconfigured`.
 - Under `sidecar`, every worktree resolves `cw` to the same path.
 - `cw --state` resolves to the same path from the main checkout and every worktree, and files written there do not appear in `git status`.
 - `cw` outside a git repository exits non-zero with a clear message.
 - `wt-add <branch>` behaves exactly as it does today, and the workspace exists afterwards.
 - `wt-add --no-attach <branch>` creates the worktree and tmux session while leaving the current client attached where it was.
-- `setup-workspace` on this repo writes `.agents/config.md`, `.agents/tracker.md` and `.agents/domain.md`, and creates no sidecar.
+- `setup-workspace` on this repo writes `.agents/workspace/config.md`, `tracker.md` and `domain.md`, and creates no sidecar.
 - **[tmrw]** `setup-workspace` on a `~/tmrw` repo defaults to sidecar mode, writes nothing inside the repo, and leaves `git status` clean.
 
 ### Phase 2 — Run layer

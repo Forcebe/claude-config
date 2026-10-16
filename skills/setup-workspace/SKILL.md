@@ -24,7 +24,7 @@ Read the repo's actual state; assume nothing.
 
 - `cw --repo`, `cw --key`, and `git remote -v`: which repo is this, and who owns it?
 - `cw --mode`: has this repo been set up already? An unconfigured repo reports `unconfigured`.
-- Does `GLOSSARY.md`, `docs/adr/`, or `.agents/` already exist?
+- Does `GLOSSARY.md`, `docs/adr/`, or `.agents/workspace/` already exist? An `.agents/` holding anything else belongs to the repo's owners; leave it alone.
 - `git log --oneline -20 --format='%an'`: is this a solo repo or a shared one?
 - Does the branch naming or recent history show ticket ids (`TMRW-123`)?
 
@@ -57,7 +57,7 @@ Show a draft of all three files and let the user edit before anything is written
 
 **The mode is not recorded anywhere. It is implied by where `config.md` lands**, so writing the file to the right directory is the act of choosing the mode:
 
-- **in-repo** → `.agents/` in the working tree. Create no sidecar.
+- **in-repo** → `.agents/workspace/` in the working tree. Create no sidecar.
 - **sidecar** → `mkdir -p "$(cw --sidecar)"` and write there.
 
 Write all three files to that one directory:
@@ -72,7 +72,7 @@ Run `cw --mode` and confirm it reports what was intended. If it reports `sidecar
 
 In **sidecar** mode, also run `git status --porcelain` and confirm it is empty. If it is not, something was written into the repo: remove it and say so. This check is the whole point of the mode, so never skip it.
 
-In **in-repo** mode, show the user the files to commit, and say that a new worktree will read as `unconfigured` until they are committed, because `.agents/` is tracked content.
+In **in-repo** mode, show the user the files to commit, and say that a new worktree will read as `unconfigured` until they are committed, because `.agents/workspace/` is tracked content.
 
 ### 6. Done
 

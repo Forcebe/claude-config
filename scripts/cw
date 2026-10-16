@@ -20,7 +20,7 @@ Resolve where this repository's agent files live.
   --mode      Print "in-repo", "sidecar", or "unconfigured"
 
 The storage mode is not recorded anywhere; it is implied by which config.md
-exists. A repo holding .agents/config.md is in-repo. A repo whose sidecar
+exists. A repo holding .agents/workspace/config.md is in-repo. One whose sidecar
 holds config.md is sidecar. Neither, and it is unconfigured, which resolves
 as sidecar so that an unconfigured repo is never written into.
 
@@ -58,7 +58,7 @@ key=$(repo_key)
 sidecar="$workspace_root/$key"
 # Tracked docs belong to the branch being worked on, so this is the current
 # worktree rather than the main checkout.
-tree_docs="$(git rev-parse --show-toplevel)/.agents"
+tree_docs="$(git rev-parse --show-toplevel)/.agents/workspace"
 
 # A sidecar config wins over a repo one. The repo is the surface we must never
 # write to by accident, so ambiguity resolves away from it.
