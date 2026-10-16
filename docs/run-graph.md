@@ -1,6 +1,6 @@
 # The run graph
 
-The execution surface: the task graph a piece of work is actually built through. It lives under `$(cw --state)/runs/`, which resolves inside the repo's shared git directory, so every worktree sees the same graph, nothing is ever committed, and nothing appears in `git status`.
+The execution surface: the run graph a piece of work is actually built through. It lives under `$(cw --state)/runs/`, which resolves inside the repo's shared git directory, so every worktree sees the same graph, nothing is ever committed, and nothing appears in `git status`.
 
 Linear is a separate layer and holds none of this. See `tracker.md` in the workspace.
 

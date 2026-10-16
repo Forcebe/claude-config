@@ -66,7 +66,7 @@ The sidecar lives at `~/.claude-workspace`, overridable with `CLAUDE_WORKSPACE_R
 
 ## Design
 
-`docs/agent-workspace-design.md` is the design note for the in-progress workspace build: its constraints, phases, and acceptance criteria. `tests/phase-N.sh` holds the criteria for each phase as a runnable script, re-run at the end of every later phase.
+`docs/agent-workspace-design.md` is the design note for the in-progress workspace build: its constraints, phases, and acceptance criteria. `docs/run-graph.md` specifies the ticket format. `tests/phase-N.sh` holds each phase's criteria as a runnable script, re-run at the end of every later phase, and `tests/glossary.sh` enforces the vocabulary in `.agents/workspace/GLOSSARY.md`.
 
 ## Setup
 

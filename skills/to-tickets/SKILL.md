@@ -50,7 +50,7 @@ Present the proposed breakdown as a numbered list. For each ticket, show:
 - **Title**: short descriptive name
 - **Blocked by**: which other tickets (if any) must complete first
 - **What it delivers**: the end-to-end behavior this ticket makes work
-- **User stories covered**: which user stories from the PRD this addresses
+- **User stories covered**: which user stories from the spec this addresses
 
 Ask the user:
 
@@ -64,7 +64,7 @@ Iterate until the user approves the breakdown.
 
 Write one file per ticket to `$(cw --state)/runs/<slug>/tickets/NN-slug.md`, numbered from `01` in dependency order so that reading the directory reads the intended sequence. Use the template below.
 
-**Write nothing to Linear.** Not the tickets, not a parent issue, not a label. The run graph holds the whole task graph; Linear holds only what the team would have seen anyway.
+**Write nothing to Linear.** Not the tickets, not a parent issue, not a label. The run graph holds the whole task breakdown; Linear holds only what the team would have seen anyway.
 
 Set `blocked-by` to the ids of the blocking tickets, space separated, or leave it empty. Where the graph is a chain, set `stack-parent` too: those tickets become a stack of PRs, and `wt-add <branch> <parent-branch>` takes the parent's branch as its base.
 

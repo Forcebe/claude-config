@@ -8,7 +8,7 @@ Use this server, not the claude.ai Linear connector. Both point at the same Line
 
 Linear is the **team's record**: issues as the team understands them, with status, assignee, project and cycle.
 
-It is **not** the execution surface. The run graph under the docs root holds the task graph — tickets, blocking edges, triage state, claims, branch bindings — and Linear never sees any of it.
+It is **not** the execution surface. The **run graph** — tickets, blocking edges, triage state, claims, branch bindings — lives in the run state that `cw --state` prints, and Linear never sees any of it.
 
 Three rules follow:
 

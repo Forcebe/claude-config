@@ -69,7 +69,7 @@ Config is split into three files rather than one, along the boundaries of which 
 
 Linear is the team's record: issues as the team understands them, with status, assignee, project, and cycle. It gets nothing else.
 
-The **run graph** is the execution surface, under `$(cw --state)/runs/<slug>/` — the shared git directory, in both storage modes, for the reason given above. It holds the full task graph — tickets, blocking edges, triage state, claims, agent briefs, branch bindings — as one markdown file per ticket.
+The **run graph** is the execution surface, under `$(cw --state)/runs/<slug>/` — the shared git directory, in both storage modes, for the reason given above. It holds the tickets, their blocking edges, triage state, claims, agent briefs and branch bindings, as one markdown file per ticket.
 
 The two are bound by a pointer. Each run records the Linear issue it serves (`linear: TMRW-123`). A single comment back on the Linear issue is available for traceability, as an opt-in, never as a label.
 
@@ -182,7 +182,7 @@ Criteria marked **[tmrw]** cannot be validated in this repository and need a `~/
 
 ### Phase 2 — Run layer
 
-Task graph format, claims, frontier, `cw status`, `SessionStart` hook.
+Run graph format, claims, frontier, `cw status`, `SessionStart` hook.
 
 - A run with three tickets and a blocking chain exposes exactly one frontier ticket.
 - Claiming from worktree A succeeds; claiming the same ticket from worktree B fails.
@@ -282,7 +282,9 @@ Bootstrap order, since phase 1 cannot track itself:
 3. Run a grilling and domain-modeling pass over the design conversation to produce `GLOSSARY.md`, pinning the vocabulary before phases 3 through 7 drift from it.
 4. Build phase 2, then seed the run graph with tickets for phases 3 through 7. From there the work tracks itself.
 
-Steps 1, 2 and 4 were done. **Step 3 was skipped**, and the cost has shown up exactly where it was predicted: every review pass since has caught vocabulary drift — `existing seams` against `seams that already exist`, `PRD` against `spec`, `issues` against `tickets`. The terms are settled enough now to write down, and doing so would turn a recurring review finding into a test.
+Step 3 was skipped at the time, and the cost showed up exactly where it was predicted: three review passes each caught vocabulary drift — `existing seams` against `seams that already exist`, `PRD` against `spec`, `issues` against `tickets`.
+
+It has since been done, after phase 4 and before phase 5. Writing the glossary immediately surfaced two more: `task graph` used for the run graph in five places, and a **factual** error in both tracker templates putting the run graph under the docs root rather than in the run state. <!-- glossary-exempt --> `tests/glossary.sh` now enforces every rejected synonym, which turns a recurring manual review finding into a check.
 
 One risk to hold onto: dogfooding a half-built system on the repository that *is* the system means a broken skill can block the work of fixing it. So phase 1's tooling stays simple and independently testable, and the run graph never becomes the only record of what is left to build. This note is the backstop.
 
