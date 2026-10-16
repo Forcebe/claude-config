@@ -91,38 +91,11 @@ docs_root() {
 
 # --- run graph -------------------------------------------------------------
 
-run_dir() {
-	local run="$1" dir="$state/runs/$1"
-	[[ -d "$dir" ]] || {
-		echo "Error: no run '$run' under $state/runs" >&2
-		exit 1
-	}
-	printf '%s' "$dir"
-}
-
-ticket_file() {
-	local dir="$1" id="$2"
-	local f="$dir/tickets/$id.md"
-	[[ -f "$f" ]] || {
-		echo "Error: no ticket '$id' in $dir/tickets" >&2
-		exit 1
-	}
-	printf '%s' "$f"
-}
-
-# Tickets carry a flat `key: value` header so this stays greppable and needs no
-# YAML parser. Values never span lines.
-ticket_field() {
-	sed -n '/^---$/,/^---$/p' "$1" | sed -n "s/^$2:[[:space:]]*//p" | head -1
-}
-
-ticket_ids() {
-	local dir="$1"
-	[[ -d "$dir/tickets" ]] || return 0
-	find "$dir/tickets" -name '*.md' -maxdepth 1 | sort | while read -r f; do
-		basename "$f" .md
-	done
-}
+# These set globals rather than printing, because a helper called as $(...)
+# runs in a subshell where `exit` ends only the substitution: the caller would
+# carry on with an empty value and fail later, confusingly.
+run_dir=""
+ticket_md=""
 
 valid_id() {
 	[[ "$1" =~ ^[A-Za-z0-9._-]+$ ]] || {
@@ -131,9 +104,55 @@ valid_id() {
 	}
 }
 
+require_run() {
+	run_dir="$state/runs/$1"
+	[[ -d "$run_dir" ]] || {
+		echo "Error: no run '$1' under $state/runs" >&2
+		exit 1
+	}
+}
+
+require_ticket() {
+	valid_id "$1"
+	ticket_md="$run_dir/tickets/$1.md"
+	[[ -f "$ticket_md" ]] || {
+		echo "Error: no ticket '$1' in $run_dir/tickets" >&2
+		exit 1
+	}
+}
+
+# Only the first --- fenced block is the header. Prose in the body that starts
+# with a key is prose, and must neither be read nor rewritten.
+ticket_field() {
+	awk -v key="$2:" '
+		NR == 1 && $0 == "---" { inhdr = 1; next }
+		inhdr && $0 == "---"   { exit }
+		inhdr && index($0, key) == 1 {
+			sub(/^[^:]*:[[:space:]]*/, "")
+			print
+			exit
+		}
+	' "$1"
+}
+
+set_status_done() {
+	awk '
+		NR == 1 && $0 == "---" { inhdr = 1; print; next }
+		inhdr && $0 == "---"   { inhdr = 0; print; next }
+		inhdr && /^status:/    { print "status: done"; next }
+		{ print }
+	' "$1" >"$1.tmp" && mv "$1.tmp" "$1"
+}
+
+ticket_ids() {
+	[[ -d "$1/tickets" ]] || return 0
+	find "$1/tickets" -maxdepth 1 -name '*.md' | sort | while read -r f; do
+		basename "$f" .md
+	done
+}
+
 claim_holder() {
-	local dir="$1" id="$2"
-	[[ -f "$dir/claims/$id/holder" ]] && cat "$dir/claims/$id/holder" || true
+	[[ -f "$1/claims/$2/holder" ]] && cat "$1/claims/$2/holder" || true
 }
 
 is_claimed() { [[ -d "$1/claims/$2" ]]; }
@@ -148,12 +167,12 @@ is_blocked() {
 }
 
 cmd_frontier() {
-	local dir id
-	dir=$(run_dir "$1")
-	for id in $(ticket_ids "$dir"); do
-		[[ "$(ticket_field "$dir/tickets/$id.md" status)" == "open" ]] || continue
-		is_blocked "$dir" "$id" && continue
-		is_claimed "$dir" "$id" && continue
+	local id
+	require_run "$1"
+	for id in $(ticket_ids "$run_dir"); do
+		[[ "$(ticket_field "$run_dir/tickets/$id.md" status)" == "open" ]] || continue
+		is_blocked "$run_dir" "$id" && continue
+		is_claimed "$run_dir" "$id" && continue
 		printf '%s\n' "$id"
 	done
 }
@@ -161,42 +180,38 @@ cmd_frontier() {
 # mkdir is the lock: it is atomic on every filesystem we care about, so the
 # first of two concurrent worktrees wins and the loser sees a plain failure.
 cmd_claim() {
-	local dir id tree session
-	dir=$(run_dir "$1")
-	id=$(basename "$(ticket_file "$dir" "$2")" .md)
-	mkdir -p "$dir/claims"
-	if ! mkdir "$dir/claims/$id" 2>/dev/null; then
-		echo "Error: '$id' is already claimed by:" >&2
-		claim_holder "$dir" "$id" | sed 's/^/  /' >&2
+	local tree session
+	require_run "$1"
+	require_ticket "$2"
+	mkdir -p "$run_dir/claims"
+	if ! mkdir "$run_dir/claims/$2" 2>/dev/null; then
+		echo "Error: '$2' is already claimed by:" >&2
+		claim_holder "$run_dir" "$2" | sed 's/^/  /' >&2
 		exit 1
 	fi
 	tree=$(git rev-parse --show-toplevel)
 	session=$(basename "$tree" | tr ".,: " "____")
-	cat >"$dir/claims/$id/holder" <<EOF
+	cat >"$run_dir/claims/$2/holder" <<EOF
 branch: $(git rev-parse --abbrev-ref HEAD)
 worktree: $tree
 session: $session
 at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
 EOF
-	printf '%s\n' "$id"
+	printf '%s\n' "$2"
 }
 
+# A claim can outlive its ticket, so this only needs the id to be safe.
 cmd_release() {
-	local dir id
-	dir=$(run_dir "$1")
+	require_run "$1"
 	valid_id "$2"
-	id="$2"
-	rm -rf "${dir:?}/claims/${id:?}"
+	rm -rf "${run_dir:?}/claims/${2:?}"
 }
 
 cmd_close() {
-	local dir id f
-	dir=$(run_dir "$1")
-	f=$(ticket_file "$dir" "$2")
-	id=$(basename "$f" .md)
-	# BSD and GNU sed disagree about -i, so rewrite through a temp file.
-	sed 's/^status:.*/status: done/' "$f" >"$f.tmp" && mv "$f.tmp" "$f"
-	rm -rf "${dir:?}/claims/${id:?}"
+	require_run "$1"
+	require_ticket "$2"
+	set_status_done "$ticket_md"
+	rm -rf "${run_dir:?}/claims/${2:?}"
 }
 
 # Everything here is derived live, so a killed session or a removed worktree

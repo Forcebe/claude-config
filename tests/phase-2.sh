@@ -121,6 +121,22 @@ printf -- '---\nstatus: open\n---\n\nNotes on what this supersedes:\n\nblocked-b
 check "a body line is not read as a header field" "1" \
 	"$(in_repo frontier demo | grep -c 04-prose)"
 
+# close rewrites the header only; prose in the body that starts with the key
+# is prose. Line 7 here is body text, and must survive untouched.
+printf -- '---\nstatus: open\nblocked-by:\n---\n\nExample header:\n\nstatus: open\n' \
+	>"$run/tickets/05-doc.md"
+in_repo close demo 05-doc
+check "close rewrites the header status" "done" \
+	"$(sed -n '2s/^status: //p' "$run/tickets/05-doc.md")"
+check "close leaves body prose alone" "status: open" \
+	"$(sed -n '8p' "$run/tickets/05-doc.md")"
+
+# A helper that exits inside $( ) only ends the substitution, so the caller
+# would carry on with an empty id and fail later with a confusing message.
+out=$(in_repo claim demo does-not-exist 2>&1)
+check "an unknown ticket fails with one clear error" "1" \
+	"$(grep -c '^Error:' <<<"$out")"
+
 in_repo release demo "../../../etc" >/dev/null 2>&1
 check "release rejects a traversing ticket id" "1" "$?"
 check "release left the run directory intact" "yes" \

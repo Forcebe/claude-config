@@ -51,7 +51,7 @@ What this slice makes work, end to end, from the user's point of view.
 - [ ] ...
 ```
 
-The header is flat `key: value` lines, never nested, so it stays greppable and needs no YAML parser. **Only the block between the two `---` fences is read**, so prose in the body that happens to start with `status:` or `blocked-by:` is just prose.
+The header is flat `key: value` lines, never nested, so it stays greppable and needs no YAML parser. **Only the first `---` fenced block is read, and only it is ever rewritten**, so prose in the body that happens to start with `status:` or `blocked-by:` is just prose: it is neither read as a field nor edited by `cw close`.
 
 A ticket id is its filename stem and must match `[A-Za-z0-9._-]+`. Operations that delete reject anything else rather than letting a path escape the run directory.
 
