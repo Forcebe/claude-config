@@ -65,7 +65,13 @@ A ticket id is its filename stem and must match `[A-Za-z0-9._-]+`. Operations th
 - **stack-parent**: the ticket whose branch this one stacks on, when the graph is a chain. `wt-add <branch> <parent-branch>` takes it as the base ref.
 - **triage**: `needs-info`, `ready-for-agent`, `ready-for-human` or `wontfix`, set by `/triage`. Absent means untriaged, which is the normal state for a ticket `/to-tickets` wrote: those are agent-ready by construction. This key never reaches Linear.
 
+- **type**: `research`, `prototype`, `grilling` or `task`, set by `/wayfinder` on a decision ticket. Absent on an ordinary build ticket.
+
 Unknown keys are ignored rather than rejected, so a ticket can carry notes for a skill that other skills do not need to understand.
+
+## Maps
+
+A **wayfinder map** is a run, not a separate thing: `run.md` carries `kind: wayfinder` and the map's destination, decisions and fog, and its tickets resolve decisions rather than building code. Everything else — the frontier, claims, blocking edges — works identically.
 
 ## Claims
 

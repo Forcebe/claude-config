@@ -18,6 +18,7 @@ Entry points. Type them; nothing else can.
 - **to-tickets** — Break a spec into tracer-bullet tickets in the run graph, each declaring its blocking edges.
 - **triage** — Take a ticket from raw to agent-ready: verify the claim, grill it into shape, write the brief. States stay local.
 - **implement-spec** — Build a whole run: work its frontier until the graph is empty, as a stack of PRs or on one integration branch.
+- **wayfinder** — Chart work too big and too foggy for one session as a map of decision tickets, then resolve them one at a time. Produces decisions, not deliverables.
 - **improve-codebase-architecture** — Explore a codebase for module-deepening refactors.
 - **handoff** — Compact the conversation into a handoff document for another agent to pick up.
 - **self-review** — Reviewer side of a writer↔reviewer thread on your own branch.

@@ -95,6 +95,12 @@ The format is specified in [run-graph.md](run-graph.md).
 
 A `SessionStart` hook injects that summary into every new agent session in the repository, so an agent starts knowing what else is in flight and what is already claimed.
 
+### Wayfinder labels: a decision that was superseded
+
+An early answer chose personal-prefixed labels, `nick/wayfinder:map` and the like, so that maps could be queried on the board. The later instruction that Linear "should not have any indicators of this workflow" overrides it, and phase 4 implemented that as a flat rule. <!-- glossary-exempt -->
+
+So a published map is a parent issue and sub-issues carrying no labels at all — exactly what would have been created by hand. The cost is that maps cannot be queried on the board; the local run graph is the index instead, and `cw` lists what exists. That is the right trade: a label naming this workflow is the precise thing the constraint forbids.
+
 ### Stacked pull requests
 
 The run graph already holds what stacking needs, given two fields per ticket: `branch` and `stack-parent`.
@@ -161,7 +167,7 @@ Adding it as a personal skill would recreate the duplicate-name and conflicting-
 
 Criteria marked **[tmrw]** cannot be validated in this repository and need a `~/tmrw` repo.
 
-**Phases 1 to 5 are complete.** Their automated criteria live in `tests/phase-1.sh` through `tests/phase-5.sh`, with `tests/glossary.sh` cutting across them; phase 1's tmux, worktree and shared-repo criteria are the manual checklist its script prints, and all have been run, the last against `tmrw-core-api`.
+**Phases 1 to 6 are complete.** Their automated criteria live in `tests/phase-1.sh` through `tests/phase-6.sh`, with `tests/glossary.sh` cutting across them; phase 1's tmux, worktree and shared-repo criteria are the manual checklist its script prints, and all have been run, the last against `tmrw-core-api`.
 
 ### Phase 1 — Foundation
 
@@ -229,9 +235,11 @@ Run graph format, claims, frontier, `cw status`, `SessionStart` hook.
 
 ### Phase 6 — Wayfinder
 
-- A map and its tickets are created locally with no tracker present.
-- Publishing produces a parent Linear issue and its sub-issues.
-- After publishing, the local map is a pointer rather than a duplicate.
+- A map and its tickets are created, claimed, worked and closed with no tracker configured at all.
+- A map is a run: it reuses the frontier, claims and blocking edges rather than inventing a parallel mechanism, and its `type:` key is one `cw` neither needs nor minds.
+- Publishing produces a parent Linear issue and its sub-issues, carrying **no** labels.
+- After publishing, the local map keeps the fog and the decision detail; Linear is canonical for what the team reads.
+- A ticket worked with a human cannot be resolved by the agent answering itself.
 
 ### Phase 7 — Health skills
 
@@ -266,7 +274,7 @@ The headless session could not run `cw --state`, because the path it resolves is
 These are re-run at the end of every phase, not just at the end.
 
 - **[tmrw]** A full cycle in a shared repo leaves `git status` clean and adds no workflow artifacts to its history.
-- **[tmrw]** No `nick/*`, `wayfinder:*`, or `ready-for-agent` label exists in the TMRW Linear workspace except where deliberately published.
+- **[tmrw]** No `nick/*`, `wayfinder:*`, or `ready-for-agent` label exists in the TMRW Linear workspace at all.
 - A worktree created, worked, and removed with `wt-rm` leaves the run graph intact, and leaves sidecar-mode domain docs intact. Under `in-repo`, domain docs are tracked files, so they survive by being committed and uncommitted ones die with the worktree like any other uncommitted work.
 - Today's `wt-add`, `grill-issue`, and `review-loop` workflows still work.
 
