@@ -263,6 +263,14 @@ A criterion written down is not a criterion met. The suites carry a lot of check
 - "A skill that calls `code-review` still resolves it" is vacuous: nothing calls it until phase 5.
 - Phase 4 is prose a model follows, so its suite checks the constraints that prose must satisfy — no workflow labels, writes into the run graph, one vocabulary for seams — not that a model obeyed it. A full `to-spec` → `to-tickets` → publish cycle on a `~/tmrw` repo is still unrun.
 
+### Almost nothing has actually been run
+
+The machinery is tested: `cw`, the run graph, claims, the frontier, shape, the deploy, the invocation invariant and the vocabulary all have suites, and the hard constraint has been demonstrated end to end on `tmrw-core-api`.
+
+The **skills** are a different matter. Of nineteen, one has been invoked (`domain-modeling`, to write the glossary) and one loaded (`codebase-design`). The rest have never run. Their suites check that their prose satisfies the constraints — no workflow labels, writes into the run graph, one vocabulary — not that a model follows it well.
+
+That is the honest state going into first real use, and it is the right order: the machinery had to be right before the prose was worth testing. But the first genuine piece of work will find things no suite here can, and the expectation should be that it does.
+
 ### AFK agents need `cw` permitted
 
 The headless session could not run `cw --state`, because the path it resolves is only known at runtime and the permission prompt had no one to answer it. Nothing in the design is wrong, but it is a real constraint on phase 5: implementer subagents run AFK and every skill that resolves a path through `cw` will stall the same way. `cw` has to be on the allowlist for those runs, and it is a safe thing to allow — its flags only print paths, and its verbs only touch the run graph inside `.git`.

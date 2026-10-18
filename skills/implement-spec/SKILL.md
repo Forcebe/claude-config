@@ -21,6 +21,7 @@ cw shape <run>
 ```
 
 - **`chain`** → **stack mode**. Each ticket's branch is based on its `stack-parent`'s branch, and each becomes its own pull request. Reviewable one slice at a time, which is what makes a long sequence bearable for whoever reviews it.
+- **`empty`** → there are no tickets. Stop and say so; `/to-tickets` has not run, or the run is already finished.
 - **`fan-out`** → **integration mode**. One integration branch, every ticket merged into it, one pull request at the end. A six-wide fan-out cannot be stacked; forcing it produces a tangle of rebases.
 
 Say which mode you picked and why. The user can override — a small fan-out is sometimes worth stacking anyway — but do not override silently.
@@ -46,7 +47,7 @@ Once the graph is empty, call the Skill tool with "code-review" over the stack o
 
 ## 5. Close out
 
-- **Stack mode**: push the branches and open the pull requests with `gh-stack`, bases already correct from the stack parents. When a parent changes in review, `gh-stack` restacks the children, and the run graph says which worktrees need rebasing.
+- **Stack mode**: call the Skill tool with "gh-stack" to push the branches and open the pull requests, bases already correct from the stack parents. When a parent changes in review, `gh-stack` restacks the children, and the run graph says which worktrees need rebasing.
 - **Integration mode**: open one pull request from the integration branch.
 
 Then clean up every implementer worktree with `wt-rm`, and report what landed, the branches, and anything left open.

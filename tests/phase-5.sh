@@ -52,6 +52,10 @@ check "two independent tickets are a fan-out" "fan-out" "$(shape roots)"
 # edges, not about progress.
 run="part"; mkrun $run; tk 01-a "" "done"; tk 02-b "01-a"; tk 03-c "02-b"
 check "progress does not change the shape" "chain" "$(shape part)"
+# A run with no tickets has no edges, so it has no shape. Calling it a fan-out
+# would have implement-spec announce integration mode and then do nothing.
+mkrun none
+check "a run with no tickets is empty, not a fan-out" "empty" "$(shape none)"
 
 echo
 echo "implement claims before it builds"
@@ -69,10 +73,12 @@ echo "implement-spec picks its mode from the graph"
 check "asks cw shape" "yes" "$(has implement-spec 'cw shape')"
 check "chain means stack mode" "yes" "$(has implement-spec 'chain.*stack mode')"
 check "fan-out means integration mode" "yes" "$(has implement-spec 'fan-out.*integration mode')"
+check "handles the empty answer too" "yes" "$(has implement-spec 'empty.*no tickets')"
 check "does not switch modes silently" "yes" "$(has implement-spec 'do not override silently')"
 check "works the frontier in a loop" "yes" "$(has implement-spec 'cw frontier <run>. is empty')"
 check "reviews the whole thing at the end" "yes" "$(has implement-spec 'skill tool with "code-review"')"
 check "cleans up its worktrees" "yes" "$(has implement-spec 'wt-rm')"
+check "reaches gh-stack through the Skill tool" "yes" "$(has implement-spec 'skill tool with "gh-stack"')"
 # The finding from phase 3's worktree test: an AFK agent cannot answer a prompt.
 check "warns that subagents need cw permitted" "yes" "$(has implement-spec 'permission allowlist')"
 

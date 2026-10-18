@@ -24,7 +24,8 @@ Flags resolve paths and never write. Verbs act on the run graph.
 
   status              Live worktrees, their branches, tmux sessions and claims
   frontier <run>      Tickets that are open, unblocked and unclaimed
-  shape <run>         "chain" if the blocking edges form one path, else "fan-out"
+  shape <run>         "chain" if the blocking edges form one path, "fan-out" if
+                      they branch or merge, "empty" if there are no tickets
   claim <run> <t>     Take a ticket. Fails if someone already holds it
   release <run> <t>   Give it back
   close <run> <t>     Mark it done, which also releases it
@@ -184,6 +185,10 @@ cmd_frontier() {
 cmd_shape() {
 	local id other blocker blockers roots=0 maxblockers=0 maxdeps=0 n
 	require_run "$1"
+	if [[ -z "$(ticket_ids "$run_dir")" ]]; then
+		printf 'empty\n'
+		return
+	fi
 	for id in $(ticket_ids "$run_dir"); do
 		blockers=$(ticket_field "$run_dir/tickets/$id.md" blocked-by)
 		n=$(printf '%s' "$blockers" | wc -w | tr -d ' ')

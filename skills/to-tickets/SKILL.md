@@ -62,7 +62,7 @@ Iterate until the user approves the breakdown.
 
 ### 6. Write the tickets
 
-Write one file per ticket to `$(cw --state)/runs/<slug>/tickets/NN-slug.md`, numbered from `01` in dependency order so that reading the directory reads the intended sequence. Use the template below.
+Write one file per ticket to `$(cw --state)/runs/<slug>/tickets/NN-slug.md`, creating `tickets/` if it does not exist — `cw` resolves paths but creates nothing — numbered from `01` in dependency order so that reading the directory reads the intended sequence. Use the template below.
 
 **Write nothing to Linear.** Not the tickets, not a parent issue, not a label. The run graph holds the whole task breakdown; Linear holds only what the team would have seen anyway.
 
