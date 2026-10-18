@@ -19,7 +19,7 @@ Consistent language is the whole point. Don't substitute "component", "service",
 
 **Depth** — leverage at the interface: how much behaviour a caller or a test can exercise per unit of interface they must learn. **Deep** is a lot of behaviour behind a small interface; **shallow** is an interface nearly as complex as what it hides.
 
-**Seam** — a place where behaviour can be altered without editing in that place; where a module's interface lives. Where to put the seam is its own decision, separate from what goes behind it. *Not*: boundary, which is overloaded by bounded context. This is the same word `/tdd` and `/to-spec` use for where a test is written.
+**Seam** — canonically defined in `GLOSSARY.md` at `$(cw)`, because `/to-spec` and `/tdd` use the same word for where a test goes. A place where behaviour can be observed or altered without editing in that place; where a module's interface lives. Where to put it is its own design decision, separate from what goes behind it. *Not*: boundary, which is overloaded by bounded context.
 
 **Adapter** — a concrete thing satisfying an interface at a seam. Names a role, not a substance.
 

@@ -59,13 +59,13 @@ Before spawning sub-agents, write a user-facing explanation of the problem space
 - The dependencies it would need to rely on
 - A rough illustrative code sketch to make the constraints concrete — this is not a proposal, just a way to ground the constraints
 
-Present this to the user, then immediately proceed to Step 5. The user reads and thinks about the problem while the sub-agents work in parallel.
+Present this to the user, then immediately proceed to designing the interfaces. The user reads and thinks about the problem while the sub-agents work in parallel.
 
 ### 6. Design multiple interfaces
 
 Spawn 3+ sub-agents in parallel using the Agent tool. Each must produce a **radically different** interface for the deepened module.
 
-Prompt each sub-agent with a separate technical brief (file paths, coupling details, dependency category, what's being hidden). This brief is independent of the user-facing explanation in Step 4. Give each agent a different design constraint:
+Prompt each sub-agent with a separate technical brief (file paths, coupling details, dependency category, what's being hidden). This brief is independent of the user-facing explanation written when framing the problem space. Give each agent a different design constraint:
 
 - Agent 1: "Minimize the interface — aim for 1-3 entry points max"
 - Agent 2: "Maximize flexibility — support many use cases and extension"

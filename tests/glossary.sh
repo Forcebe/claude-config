@@ -54,6 +54,17 @@ echo "the run graph is only ever said to live in one place"
 check "nothing puts it under the docs root" "" \
 	"$(corpus 'run graph under the docs root' | head -3)"
 
+# One term, one definition. codebase-design is a vocabulary reference and
+# restates several terms; only "seam" is also in the glossary, so that is the
+# one that can drift apart from it.
+echo
+echo "overlapping terms have one definition"
+flat() { tr '\n' ' ' <"$1"; }
+check "seam reads the same in both" "1" \
+	"$(flat "$glossary" | grep -c 'observed or altered without editing in that place')"
+check "codebase-design points at the glossary for it" "1" \
+	"$(flat "$root/skills/codebase-design/SKILL.md" | grep -c 'canonically defined in .GLOSSARY.md')"
+
 echo
 echo "every defined term is actually used"
 unused=""

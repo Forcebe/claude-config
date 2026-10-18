@@ -78,9 +78,15 @@ coordinate.
 
 ## Seam
 
-The public boundary a test is written at — the interface where behaviour can be
-observed without reaching inside. Seams are named and agreed before any test is
-written. A spec sketches them; `/tdd` consumes them.
+A place where behaviour can be observed or altered without editing in that
+place — where a module's interface lives. Tests are written at seams because
+observation from outside is exactly what a seam affords.
+
+Where to put a seam is its own design decision, separate from what goes behind
+it. Seams are named and agreed before any test is written: a spec sketches
+them, `/tdd` consumes them, and `/codebase-design` elaborates the design side.
+
+**Not**: "boundary", which is overloaded by bounded context.
 
 ## Sidecar
 
