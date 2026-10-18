@@ -131,9 +131,7 @@ A directory symlink cannot exclude entries, so `~/.claude/skills` and `~/.claude
 
 ## Skills
 
-Added, built: `setup-workspace`, `grilling`, `domain-modeling`, `grill-with-docs`, `research`, `triage`.
-
-Added, still to come: `implement` and `implement-spec` (phase 5), `wayfinder` (phase 6), `retro`, `diagnosing-bugs`, `codebase-design` and `wizard` (phase 7).
+Added: `setup-workspace`, `grilling`, `domain-modeling`, `grill-with-docs`, `research`, `triage`, `implement`, `implement-spec`, `wayfinder`, `retro`, `diagnosing-bugs`, `codebase-design`, `wizard`. All built.
 
 Changed: `to-spec` and `to-tickets` move onto the run graph and stop writing labels to Linear; `grill-me` and `grill-issue` are rewired onto the extracted `grilling` primitive; `handoff` writes into the workspace instead of `mktemp`; the review skills gain the layer-aware deployment fix.
 
@@ -167,7 +165,7 @@ Adding it as a personal skill would recreate the duplicate-name and conflicting-
 
 Criteria marked **[tmrw]** cannot be validated in this repository and need a `~/tmrw` repo.
 
-**Phases 1 to 6 are complete.** Their automated criteria live in `tests/phase-1.sh` through `tests/phase-6.sh`, with `tests/glossary.sh` cutting across them; phase 1's tmux, worktree and shared-repo criteria are the manual checklist its script prints, and all have been run, the last against `tmrw-core-api`.
+**All seven phases are complete.** Their automated criteria live in `tests/phase-1.sh` through `tests/phase-7.sh`, with `tests/glossary.sh` cutting across them; phase 1's tmux, worktree and shared-repo criteria are the manual checklist its script prints, and all have been run, the last against `tmrw-core-api`.
 
 ### Phase 1 — Foundation
 

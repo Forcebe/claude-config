@@ -26,18 +26,21 @@ exists() { [[ -f "$skills/$1/SKILL.md" ]]; }
 echo "the invariant"
 # Every skill named to the Skill tool must be reachable by a model. A
 # user-invoked one cannot be, so naming it is a dead instruction.
+#
+# The pattern is deliberately tight. A looser one spanned an em-dash and
+# picked up the quoted words in codebase-design's "don't substitute" list.
 violations=""
 while IFS= read -r called; do
 	exists "$called" || continue
 	is_user_invoked "$called" && violations+="$called "
-done < <(grep -rhoE 'Skill tool [^.]*"[a-z-]+"' "$skills" | grep -oE '"[a-z-]+"' | tr -d '"' | sort -u)
+done < <(grep -rhoE 'Skill tool (with|twice, for) "[a-z-]+"( and "[a-z-]+")?' "$skills" | grep -oE '"[a-z-]+"' | tr -d '"' | sort -u)
 check "no skill calls a user-invoked skill" "" "${violations% }"
 
 # The other half: anything a skill calls must actually exist.
 missing=""
 while IFS= read -r called; do
 	exists "$called" || missing+="$called "
-done < <(grep -rhoE 'Skill tool [^.]*"[a-z-]+"' "$skills" | grep -oE '"[a-z-]+"' | tr -d '"' | sort -u)
+done < <(grep -rhoE 'Skill tool (with|twice, for) "[a-z-]+"( and "[a-z-]+")?' "$skills" | grep -oE '"[a-z-]+"' | tr -d '"' | sort -u)
 check "every called skill exists" "" "${missing% }"
 
 echo

@@ -12,7 +12,19 @@ A **deep module** (John Ousterhout, "A Philosophy of Software Design") has a sma
 
 ## Process
 
-### 1. Explore the codebase
+### 1. Scope before you scan
+
+Deepening a module pays off by making future change to it easier, so weight the search toward where change actually lands. Decide *where* to look before looking:
+
+- If the user named a direction — a module, a subsystem, a pain point — take it and skip the inference.
+- Otherwise walk back a good stretch of `git log --oneline` for the hot spots: the files and areas that keep coming up. Let those pull your attention first.
+- If the history is scattered with no clear hot spot, widen the net and say so.
+
+Read `GLOSSARY.md` at `$(cw)` and the ADRs for the area first, so the proposals use the project's own words and do not re-litigate settled decisions.
+
+Call the Skill tool with "codebase-design" for the architecture vocabulary — module, interface, depth, seam, adapter, leverage, locality — and use those terms exactly rather than drifting into "component" or "service".
+
+### 2. Explore the codebase
 
 Use the Agent tool with subagent_type=Explore to navigate the codebase naturally. Do NOT follow rigid heuristics — explore organically and note where you experience friction:
 
@@ -24,7 +36,9 @@ Use the Agent tool with subagent_type=Explore to navigate the codebase naturally
 
 The friction you encounter IS the signal.
 
-### 2. Present candidates
+Apply the **deletion test** to anything you suspect is shallow: would deleting it *concentrate* complexity, or merely move it? "Concentrates" is the signal worth acting on; "moves it" is churn wearing a refactor's clothes.
+
+### 3. Present candidates
 
 Present a numbered list of deepening opportunities. For each candidate, show:
 
@@ -35,9 +49,9 @@ Present a numbered list of deepening opportunities. For each candidate, show:
 
 Do NOT propose interfaces yet. Ask the user: "Which of these would you like to explore?"
 
-### 3. User picks a candidate
+### 4. User picks a candidate
 
-### 4. Frame the problem space
+### 5. Frame the problem space
 
 Before spawning sub-agents, write a user-facing explanation of the problem space for the chosen candidate:
 
@@ -47,7 +61,7 @@ Before spawning sub-agents, write a user-facing explanation of the problem space
 
 Present this to the user, then immediately proceed to Step 5. The user reads and thinks about the problem while the sub-agents work in parallel.
 
-### 5. Design multiple interfaces
+### 6. Design multiple interfaces
 
 Spawn 3+ sub-agents in parallel using the Agent tool. Each must produce a **radically different** interface for the deepened module.
 
@@ -70,9 +84,9 @@ Present designs sequentially, then compare them in prose.
 
 After comparing, give your own recommendation: which design you think is strongest and why. If elements from different designs would combine well, propose a hybrid. Be opinionated — the user wants a strong read, not just a menu.
 
-### 6. User picks an interface (or accepts recommendation)
+### 7. User picks an interface (or accepts recommendation)
 
-### 7. Present the refactor proposal
+### 8. Present the refactor proposal
 
 Present the complete refactor proposal using the template in [REFERENCE.md](REFERENCE.md). Ask the user whether they want to:
 

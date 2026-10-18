@@ -19,6 +19,9 @@ Entry points. Type them; nothing else can.
 - **triage** — Take a ticket from raw to agent-ready: verify the claim, grill it into shape, write the brief. States stay local.
 - **implement-spec** — Build a whole run: work its frontier until the graph is empty, as a stack of PRs or on one integration branch.
 - **wayfinder** — Chart work too big and too foggy for one session as a map of decision tickets, then resolve them one at a time. Produces decisions, not deliverables.
+- **diagnosing-bugs** — For the bug that resists: build a red loop before theorising, minimise, then fix with a regression test.
+- **retro** — Look back over a session and improve the agent's environment, not the code.
+- **wizard** — Generate an interactive script for the steps only a human can take.
 - **improve-codebase-architecture** — Explore a codebase for module-deepening refactors.
 - **handoff** — Compact the conversation into a handoff document for another agent to pick up.
 - **self-review** — Reviewer side of a writer↔reviewer thread on your own branch.
@@ -34,6 +37,7 @@ Primitives and references. Skills call these; so can you.
 - **tdd** — Test-driven development with the red-green-refactor loop.
 - **prototype** — Build a throwaway prototype to answer a design question.
 - **implement** — Build one ticket: claim, worktree, TDD, review, close. Model-invoked because `implement-spec` dispatches each ticket to it.
+- **codebase-design** — The deep-module vocabulary: module, interface, depth, seam, adapter, leverage, locality. `tdd` and `improve-codebase-architecture` both reach for it.
 - **gh-stack** — Manage stacked branches and PRs with the gh-stack CLI extension.
 - **code-review** — Multi-agent review over a diff, proving or refuting findings by running tests and API calls.
 - **review-loop** — The whole writer↔reviewer negotiation, in the chat that wrote the code.

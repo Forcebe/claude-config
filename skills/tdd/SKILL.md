@@ -21,6 +21,8 @@ A **seam** is the public boundary you test at — the interface where behaviour 
 
 **Test only at pre-agreed seams.** Before writing any test, write the seams under test down and confirm them with the user. No test is written at an unconfirmed seam. You cannot test everything, so agreeing the seams up front is what puts the effort on critical paths and complex logic instead of spreading it over every edge case.
 
+When the shape of the interface is itself in question — how deep the module is, where the seam belongs, what it should expose — call the Skill tool with "codebase-design". It owns that vocabulary and the references that go with it.
+
 Ask: "what is the public interface here, and which seams should we test?" Give each proposed seam a one-line note on what it catches and what it misses.
 
 Prefer existing seams to new ones, and use the highest seam that can still observe the behaviour. The fewer seams across the codebase, the better — the ideal is one.
@@ -61,8 +63,8 @@ Before writing any code:
 - [ ] Confirm with the user what interface changes are needed
 - [ ] Write down the **seams** under test and confirm them (see [Seams](#seams-where-tests-go))
 - [ ] Confirm with the user which behaviors to test (prioritize)
-- [ ] Identify opportunities for [deep modules](deep-modules.md) (small interface, deep implementation)
-- [ ] Design interfaces for [testability](interface-design.md)
+- [ ] Identify opportunities for deep modules: a small interface over a lot of implementation
+- [ ] Design the interface for testability
 - [ ] List the behaviors to test (not implementation steps)
 - [ ] Get user approval on the plan
 
@@ -99,7 +101,7 @@ Rules:
 
 ### 4. Refactor
 
-After all tests pass, look for [refactor candidates](refactoring.md):
+After all tests pass, look for refactor candidates:
 
 - [ ] Extract duplication
 - [ ] Deepen modules (move complexity behind simple interfaces)
