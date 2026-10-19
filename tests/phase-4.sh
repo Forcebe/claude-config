@@ -44,6 +44,22 @@ check "to-tickets verifies its own edges" "yes" "$(has to-tickets 'cw frontier')
 check "to-tickets sets stack-parent for a chain" "yes" "$(has to-tickets 'stack-parent')"
 
 echo
+echo "work that already exists has an on-ramp"
+gi() { grep -qiE "$1" "$skills/grill-issue/SKILL.md" && echo yes || echo no; }
+check "grill-issue writes a run" "yes" "$(gi 'cw --state.*/runs/')"
+check "it records the linear pointer" "yes" "$(gi '^linear: TMRW')"
+check "it records the prd pointer" "yes" "$(gi '^prd:')"
+# An implementer subagent runs AFK and may have no Slite access at all.
+check "the spec is snapshotted, not linked" "yes" "$(gi 'snapshot rather than link')"
+check "it says why snapshotting matters" "yes" "$(gi 'no slite access')"
+check "it mirrors existing sub-issues" "yes" "$(gi 'one ticket per sub-issue')"
+# Linear's MCP exposes no relations, so edges cannot come across.
+check "it reviews the edges it could not import" "yes" "$(gi 'no issue relations')"
+check "it reviews the slicing too" "yes" "$(gi 'not always a set of vertical slices')"
+check "it writes nothing back to Linear" "yes" "$(gi 'nothing is written back to linear')"
+check "to-tickets defers when a breakdown exists" "yes" "$(has to-tickets 'point the user at ./grill-issue')"
+
+echo
 echo "tdd speaks the seam vocabulary"
 check "tdd defines a seam" "yes" "$(has tdd 'a \*\*seam\*\* is')"
 check "tdd requires pre-agreed seams" "yes" "$(has tdd 'pre-agreed seams')"

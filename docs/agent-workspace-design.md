@@ -65,6 +65,16 @@ A third consequence is operational rather than a trade-off: a freshly created wo
 
 Config is split into three files rather than one, along the boundaries of which skill reads what. `config.md` is small and read first. `tracker.md` holds the tracker operations, is the bulk of the content, and varies most between repositories. `domain.md` holds the documentation layout and the rules for consuming it. Triage label strings live in `tracker.md`, because they are tracker-specific.
 
+### Two ways in
+
+Work arrives two ways, and the pipeline needs an entrance for each.
+
+**New ideas** go `/grill-with-docs` → `/to-spec` → `/to-tickets`: the spec is written from the conversation, and the tickets are sliced from the spec.
+
+**Work that already exists** goes through `/grill-issue`. Most TMRW work arrives as a Linear issue with a Slite PRD and sometimes sub-issues the team already wrote, and the first version of this build had no route for it at all: `grill-issue` handed a decision log into plan mode, where it evaporated, and `implement` needs a run it had no way to produce.
+
+It now writes the run. The PRD is **snapshotted** into `spec.md` with a pointer back to Slite rather than linked, because an implementer subagent runs AFK and may have no Slite access — a run that cannot be built without a browser is not a run. Existing sub-issues are mirrored as tickets and then **reviewed**, because two things cannot be imported: Linear's MCP exposes no issue relations, so every `blocked-by` comes back empty and the frontier would offer the whole set at once; and a breakdown written for people is not always a set of vertical slices.
+
 ### Two tracking layers
 
 Linear is the team's record: issues as the team understands them, with status, assignee, project, and cycle. It gets nothing else.

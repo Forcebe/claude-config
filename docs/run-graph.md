@@ -25,10 +25,12 @@ A ticket's **id** is its filename without `.md`. Ids sort, and the numeric prefi
 # <run title>
 
 linear: TMRW-123
-spec: <path or URL, if there is one>
+prd: <Slite URL, if the work came from one>
 
 <what this run delivers, in a line or two>
 ```
+
+`prd:` points at the Slite document the work came from, where there is one. `spec.md` holds a **snapshot** of its substance rather than a link, so a subagent with no Slite access can still build; the pointer is how a reader gets back to the original when the two disagree.
 
 `linear:` is a pointer and nothing more. Nothing about the run graph is written back to Linear unless publishing is asked for.
 

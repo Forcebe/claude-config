@@ -16,6 +16,8 @@ The tickets go in the run graph under `$(cw --state)/runs/`, never on Linear. Th
 
 Work from whatever is already in the conversation. If the user passes a reference — a run slug, a spec path, a Linear issue id — resolve it and read it in full.
 
+If the reference is a **Linear issue that already has sub-issues**, stop and point the user at `/grill-issue`. That is the on-ramp for work the team has already broken down: it mirrors the existing breakdown instead of inventing a second one beside it. This skill slices a spec that has no breakdown yet.
+
 ### 2. Locate or create the run
 
 A spec written by `/to-spec` already has a run at `$(cw --state)/runs/<slug>/`. Use it. If there is no run yet, create one: a directory under `$(cw --state)/runs/`, with a `run.md` naming the effort and recording `linear: <id>` if a Linear issue already covers it.
