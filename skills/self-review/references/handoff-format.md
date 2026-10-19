@@ -125,9 +125,9 @@ Record it with a one-line question the human can answer without opening the file
 
 Count the DISPUTED↔HELD round-trips on a finding. After **2 full rounds** without convergence, the reviewer must set it `DEADLOCKED` and stop arguing — surface it in the digest's `Needs your decision` section with both final positions. Agents entrench; they rarely converge by attrition. Don't burn turns past the cap.
 
-## Writer dispositions (apply-review)
+## Writer dispositions
 
-For each `OPEN`/`REOPENED`/`HELD` finding, the writer picks exactly one, re-reading the current code first:
+Made by `apply-review`, or by `review-loop` playing the writer. For each `OPEN`/`REOPENED`/`HELD` finding, the writer picks exactly one, re-reading the current code first:
 
 - **FIXED** — made the change → `ADDRESSED`. Note what changed.
 - **DISPUTE** — disagrees, with a concrete reason → `DISPUTED`.

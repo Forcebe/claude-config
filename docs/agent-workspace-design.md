@@ -137,6 +137,14 @@ Skills that must stay model-invoked, because other skills call them via the Skil
 
 Skills that become user-invoked, with `disable-model-invocation: true`: `setup-workspace`, `grill-me`, `grill-issue`, `grill-with-docs`, `to-spec`, `to-slices`, `triage`, `implement-spec`, `wayfinder`, `handoff`, `improve-codebase-architecture`, `self-review`, `apply-review`, `retro`, `diagnosing-bugs`, `wizard`.
 
+### The review contract exists twice
+
+`self-review`'s `references/handoff-format.md` and the plugin's `review-loop/references/handoff-format.md` are two copies of one contract. On the work layer the writer half of the loop comes from this repo and the reviewer half from the plugin, so if they disagree the negotiation breaks mid-flow — each side reading a spec the other is not writing to.
+
+They do not disagree today. The eight lines that differ are all about which skills do what: this repo's copy names `self-review`, `apply-review` and `review-loop`, while the plugin's names only `review-loop`, because it ships neither of the others. The format — headings, dispositions, the seed snippet, the thread file location — is identical.
+
+`tests/review-contract.sh` holds it that way. It compares the structural parts and the thread path, and tolerates the prose that legitimately differs between the two packages. Two copies is still the real problem, and the fix is upstream: see slice 10.
+
 ### A conflict to resolve first
 
 `code-review` and `review-loop` exist twice on a work-layer machine: in `~/.claude/skills` via this repo, and in the `tmrw-standards` plugin, whose copies are forks with cross-references rewritten to `tmrw-standards:`. The plugin is enabled only on the work layer, so the personal copies are the personal-layer fallback and cannot simply be deleted.
