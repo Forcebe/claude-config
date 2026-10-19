@@ -1,6 +1,6 @@
 # Self-Review Handoff Format
 
-The shared contract for the writer↔reviewer negotiation loop. `self-review` seeds and adjudicates this file; `apply-review` responds to it; `review-loop` plays both sides automatically in the chat that wrote the code. All three read this spec so the format never drifts.
+The contract for the writer↔reviewer negotiation loop. `review-loop` plays both sides in the chat that wrote the code: it seeds this file from a review, responds to each finding as the writer, and has the `cr-adjudicate` agent rule on those responses. This spec is what keeps the format stable across turns.
 
 ## Location
 
@@ -83,7 +83,7 @@ Below the digest, under a `## Findings` heading, one block per finding. Order by
 - turn 3 · reviewer · <RESOLVED|REOPENED|ACCEPTED|HELD|STALE-CONFIRMED> — <note>
 ```
 
-The seed snippet is load-bearing: `apply-review` checks the current code against it to detect staleness, and the reviewer uses it to judge whether a "stale" claim is honest.
+The seed snippet is load-bearing: the writer checks the current code against it to detect staleness, and the adjudicator uses it to judge whether a "stale" claim is honest.
 
 ## Status state machine
 
@@ -127,7 +127,7 @@ Count the DISPUTED↔HELD round-trips on a finding. After **2 full rounds** with
 
 ## Writer dispositions
 
-Made by `apply-review`, or by `review-loop` playing the writer. For each `OPEN`/`REOPENED`/`HELD` finding, the writer picks exactly one, re-reading the current code first:
+For each `OPEN`/`REOPENED`/`HELD` finding, the writer picks exactly one, re-reading the current code first:
 
 - **FIXED** — made the change → `ADDRESSED`. Note what changed.
 - **DISPUTE** — disagrees, with a concrete reason → `DISPUTED`.
@@ -135,7 +135,7 @@ Made by `apply-review`, or by `review-loop` playing the writer. For each `OPEN`/
 
 ## Reviewer adjudications
 
-Made by `self-review` in adjudicate mode, or by the `cr-adjudicate` agent under `review-loop`. For each `ADDRESSED`/`DISPUTED`/`STALE` finding, re-read the current code and rule:
+Made by the `cr-adjudicate` agent. For each `ADDRESSED`/`DISPUTED`/`STALE` finding, re-read the current code and rule:
 
 - On `ADDRESSED`: `RESOLVED` if the fix holds, else `REOPENED` with what's still wrong.
 - On `DISPUTED`: `ACCEPTED` if the pushback is reasonable, else `HELD` with a rebuttal.

@@ -135,23 +135,23 @@ Matt's split between model-invoked and user-invoked skills rests on one invarian
 
 Skills that must stay model-invoked, because other skills call them via the Skill tool: `grilling`, `domain-modeling`, `codebase-design`, `tdd`, `prototype`, `research`, `implement`, `review-loop`, `code-review`, and the `tmrw-standards` plugin's `commit` and `create-pr`. `codebase-design` belongs here because `tdd` and `improve-codebase-architecture` both reach it that way, and `implement` because `implement-spec` dispatches each slice to it.
 
-Skills that become user-invoked, with `disable-model-invocation: true`: `setup-workspace`, `grill-me`, `grill-issue`, `grill-with-docs`, `to-spec`, `to-slices`, `triage`, `implement-spec`, `wayfinder`, `handoff`, `improve-codebase-architecture`, `self-review`, `apply-review`, `retro`, `diagnosing-bugs`, `wizard`.
+Skills that become user-invoked, with `disable-model-invocation: true`: `grill-me`, `grill-issue`, `grill-with-docs`, `to-spec`, `to-slices`, `triage`, `implement-spec`, `wayfinder`, `handoff`, `improve-codebase-architecture`, `retro`, `diagnosing-bugs`, `wizard`.
 
-### The review contract exists twice
+### The review contract, and the skills that no longer exist
 
-`self-review`'s `references/handoff-format.md` and the plugin's `review-loop/references/handoff-format.md` are two copies of one contract. On the work layer the writer half of the loop comes from this repo and the reviewer half from the plugin, so if they disagree the negotiation breaks mid-flow — each side reading a spec the other is not writing to.
+`self-review` and `apply-review` were the two halves of the review negotiation, run in separate chats. `review-loop` supersedes them by playing both sides in the chat that wrote the code, and they are no longer used, so they are gone.
 
-They do not disagree today. The eight lines that differ are all about which skills do what: this repo's copy names `self-review`, `apply-review` and `review-loop`, while the plugin's names only `review-loop`, because it ships neither of the others. The format — headings, dispositions, the seed snippet, the thread file location — is identical.
+Removing them fixed the duplication rather than papering over it. This repo's `review-loop` had been reaching across to `../self-review/references/handoff-format.md`, a cross-skill reference of exactly the kind the invocation convention warns against — and the only reason this repo's layout differed from the plugin's, which keeps the contract at `review-loop/references/`. The contract now sits beside the only skill that reads it, in the same place in both packages, and the two copies are **byte-identical**: everything that differed was prose naming skills that no longer exist.
 
-`tests/review-contract.sh` holds it that way. It compares the structural parts and the thread path, and tolerates the prose that legitimately differs between the two packages. Two copies is still the real problem, and the fix is upstream: see slice 10.
+`tests/review-contract.sh` asserts they stay identical, that `review-loop` reaches into no other skill, and that nothing references the removed pair. The remaining duplication is just the personal-layer fallback, which is the same accepted pattern as `code-review`.
 
-### A conflict to resolve first
+### A conflict to resolve first### A conflict to resolve first
 
 `code-review` and `review-loop` exist twice on a work-layer machine: in `~/.claude/skills` via this repo, and in the `tmrw-standards` plugin, whose copies are forks with cross-references rewritten to `tmrw-standards:`. The plugin is enabled only on the work layer, so the personal copies are the personal-layer fallback and cannot simply be deleted.
 
 Fix: make `dev-env`'s `claude` run script layer-aware, so it skips linking the colliding entries when `layer=work`.
 
-The collision is **two** skills, not four: `tmrw-standards` ships `code-review` and `review-loop`, but has no `self-review` or `apply-review`, so skipping all four would have deleted two working skills.
+The collision is `code-review` and `review-loop`, which `tmrw-standards` also ships. This repo keeps its own copies as the personal-layer fallback, where the plugin is not enabled.
 
 It is **skills only**. The plugin also ships nine `cr-*` agent files, but plugin agents surface under a `plugin:name` prefix and these never did: the bare `cr-*` types the review skills spawn come from this repo. Skipping them on the work layer broke those skills, so agents are linked on every layer.
 

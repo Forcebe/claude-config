@@ -1,6 +1,6 @@
 ---
 name: cr-adjudicate
-description: "Internal agent for the review-loop and self-review skills. Rules on a writer's responses to review findings — accepting fixes and pushback, or holding the finding with a rebuttal. Do not invoke directly — called by the review skills."
+description: "Internal agent for the review-loop skill. Rules on a writer's responses to review findings — accepting fixes and pushback, or holding the finding with a rebuttal. Do not invoke directly — called by review-loop."
 tools: Read, Grep, Glob
 model: sonnet
 color: cyan

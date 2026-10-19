@@ -1,6 +1,6 @@
 ---
 name: review-loop
-description: Reviews and fixes your own work once it is finished, in the chat that wrote it. Seeds a verified review, answers every finding as the author, has fresh agents adjudicate those answers, and reports what changed. Use when the user has finished a piece of work and wants it checked before committing — "review my work", "review and fix", "I'm done, check this", "run the review loop", "review this branch and address it". It needs the implementation context, so it only works in the session that did the work. Do NOT use on code someone else wrote, or from a fresh chat — use code-review or self-review for those.
+description: Reviews and fixes your own work once it is finished, in the chat that wrote it. Seeds a verified review, answers every finding as the author, has fresh agents adjudicate those answers, and reports what changed. Use when the user has finished a piece of work and wants it checked before committing — "review my work", "review and fix", "I'm done, check this", "run the review loop", "review this branch and address it". It needs the implementation context, so it only works in the session that did the work. Do NOT use on code someone else wrote, or from a fresh chat — use code-review for those.
 ---
 
 # Review Loop
@@ -11,11 +11,11 @@ Your own work, reviewed and fixed before you commit it.
 
 **This chat is the writer.** Run it where the code was written, because the writer's real job is informed pushback — "that input can't reach this function, the caller validates it" — and that argument only exists where the context does. The reviewing is done by fresh subagents that have never seen this conversation, so the review stays unbiased while the writer stays informed.
 
-You operate on the thread file defined in [the handoff format spec](../self-review/references/handoff-format.md). Read it before touching the file. The thread is the audit trail the final report is built from.
+You operate on the thread file defined in [the handoff format spec](references/handoff-format.md). Read it before touching the file. The thread is the audit trail the final report is built from.
 
 ## Before you start
 
-**Check you're in the right chat.** If you have no context on how this branch came to be — you just opened this session, or the conversation is about something else — stop and say so. Running the loop from a cold start produces a writer that agrees with everything, which is worse than no review. Point the human at `self-review` + `apply-review` instead.
+**Check you're in the right chat.** If you have no context on how this branch came to be — you just opened this session, or the conversation is about something else — stop and say so. Running the loop from a cold start produces a writer that agrees with everything, which is worse than no review. Point the human at `code-review` instead, which reviews a diff it has no history with and reports rather than fixes.
 
 If a thread file already exists for this branch, don't re-seed. Pick up from wherever it is: if findings are awaiting the writer, take a writer turn; if they're awaiting the reviewer, adjudicate.
 

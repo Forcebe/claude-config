@@ -118,8 +118,8 @@ devenv="$HOME/personal/dev-env/runs/claude"
 if [[ -f "$devenv" ]]; then
 	tmp=$(cd "$(mktemp -d "${TMPDIR:-/tmp}/layer-XXXXXX")" && pwd -P)
 	claude_config_dir="$tmp/src"
-	mkdir -p "$claude_config_dir"/{skills/code-review,skills/grilling,skills/self-review,agents}
-	touch "$claude_config_dir"/skills/{code-review,grilling,self-review}/SKILL.md
+	mkdir -p "$claude_config_dir"/{skills/code-review,skills/grilling,skills/handoff,agents}
+	touch "$claude_config_dir"/skills/{code-review,grilling,handoff}/SKILL.md
 	touch "$claude_config_dir"/agents/cr-verify.md
 	log_step() { :; }
 	# shellcheck disable=SC1090
@@ -128,16 +128,23 @@ if [[ -f "$devenv" ]]; then
 
 	dest="$tmp/dest"
 	link_entries "$claude_config_dir/skills" "$dest" "code-review review-loop"
-	check "work layer excludes the plugin's skills" "grilling self-review" \
+	check "work layer excludes the plugin's skills" "grilling handoff" \
 		"$(cd "$dest" && printf '%s ' * | sed 's/ $//')"
 
 	link_entries "$claude_config_dir/skills" "$dest" ""
-	check "switching to personal restores them" "code-review grilling self-review" \
+	check "switching to personal restores them" "code-review grilling handoff" \
 		"$(cd "$dest" && printf '%s ' * | sed 's/ $//')"
 
 	link_entries "$claude_config_dir/skills" "$dest" "code-review review-loop"
-	check "switching back leaves no orphan" "grilling self-review" \
+	check "switching back leaves no orphan" "grilling handoff" \
 		"$(cd "$dest" && printf '%s ' * | sed 's/ $//')"
+
+	# git leaves an empty directory behind when a skill's files are deleted;
+	# linking it deploys a skill that has no SKILL.md.
+	mkdir -p "$claude_config_dir/skills/emptied"
+	link_entries "$claude_config_dir/skills" "$dest" ""
+	check "an emptied skill directory is not linked" "no" \
+		"$([[ -e "$dest/emptied" ]] && echo yes || echo no)"
 
 	touch "$dest/not-ours"
 	link_entries "$claude_config_dir/skills" "$dest" ""

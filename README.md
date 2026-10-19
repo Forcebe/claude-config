@@ -24,8 +24,6 @@ Entry points. Type them; nothing else can.
 - **wizard** — Generate an interactive script for the steps only a human can take.
 - **improve-codebase-architecture** — Explore a codebase for module-deepening refactors.
 - **handoff** — Compact the conversation into a handoff document for another agent to pick up.
-- **self-review** — Reviewer side of a writer↔reviewer thread on your own branch.
-- **apply-review** — Writer side of that thread: fix, dispute, or mark stale, then hand back.
 
 ### Model-invoked
 
