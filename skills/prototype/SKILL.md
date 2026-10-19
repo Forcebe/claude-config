@@ -29,6 +29,6 @@ The two branches produce very different artifacts — getting this wrong wastes 
 
 Two things come out of a prototype: the **answer** and the **artifact**.
 
-The answer is what matters. Record it — the verdict and the question it settled — in the run's ticket if there is one, otherwise in an ADR or the commit message. If the user is around, that capture is a quick conversation; if not, leave the placeholder for them to fill in.
+The answer is what matters. Record it — the verdict and the question it settled — in the run's slice if there is one, otherwise in an ADR or the commit message. If the user is around, that capture is a quick conversation; if not, leave the placeholder for them to fill in.
 
-The artifact is worth keeping as a primary source, but it is not worth pushing. Commit it to a local `prototype/<name>` branch and **do not push it**: on a shared repo that branch is noise for everyone else, and the constraint is that a shared repo gains nothing from this workflow. Leave the pointer where the work lives — the ticket under `$(cw --state)/runs/<run>/tickets/`, naming the branch — so the next session can find it without the branch being visible to the team.
+The artifact is worth keeping as a primary source, but it is not worth pushing. Commit it to a local `prototype/<name>` branch and **do not push it**: on a shared repo that branch is noise for everyone else, and the constraint is that a shared repo gains nothing from this workflow. Leave the pointer where the work lives — the slice under `$(cw --state)/runs/<run>/slices/`, naming the branch — so the next session can find it without the branch being visible to the team.

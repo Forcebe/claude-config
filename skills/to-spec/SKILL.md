@@ -26,7 +26,7 @@ Confirm with the user that these seams match their expectations.
 
 Once the problem and solution are clear, write the spec using the template below.
 
-Save it to `$(cw --state)/runs/<slug>/spec.md`, creating the run directory, and write a `run.md` beside it naming the effort. **Not the repo root**: on a shared repo nothing of this workflow may be committed, and the run graph is where `to-tickets` and `implement` will look for it. Pick a short kebab-case slug from the title.
+Save it to `$(cw --state)/runs/<slug>/spec.md`, creating the run directory, and write a `run.md` beside it naming the effort. **Not the repo root**: on a shared repo nothing of this workflow may be committed, and the run graph is where `to-slices` and `implement` will look for it. Pick a short kebab-case slug from the title.
 
 Tell the user the path and the run slug.
 

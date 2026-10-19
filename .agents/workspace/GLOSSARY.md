@@ -12,8 +12,8 @@ in different places on purpose.
 
 ## Blocking edge
 
-The relation recorded in a ticket's `blocked-by` header. A ticket is unblocked
-when every ticket named there is `done`.
+The relation recorded in a slice's `blocked-by` header. A slice is unblocked
+when every slice named there is `done`.
 
 **Not**: "dependency". Blocking is about ordering work, not about code.
 
@@ -35,7 +35,7 @@ is `.agents/workspace/` in the current worktree; otherwise it is the sidecar.
 
 ## Frontier
 
-The tickets of a run that are open, unblocked and unclaimed: what can be
+The slices of a run that are open, unblocked and unclaimed: what can be
 started right now. Printed by `cw frontier`.
 
 ## PRD
@@ -55,13 +55,13 @@ edges, no labels.
 
 ## Run
 
-One effort being built: a spec, the tickets that deliver it, and the claims
+One effort being built: a spec, the slices that deliver it, and the claims
 against them. Lives at `$(cw --state)/runs/<slug>/` and is referred to by its
 slug.
 
 ## Run graph
 
-The tickets of a run together with their blocking edges — the execution
+The slices of a run together with their blocking edges — the execution
 surface. Held entirely in the run state, never on Linear.
 
 **Not**: "task graph".
@@ -103,25 +103,28 @@ decisions taken. Lives in the run as `spec.md`.
 
 ## Stack-parent
 
-The ticket whose branch another ticket's branch is based on, when a run's
-blocking edges form a chain. Those tickets become a stack of pull requests.
+The slice whose branch another slice's branch is based on, when a run's
+blocking edges form a chain. Those slices become a stack of pull requests.
 
 ## Storage mode
 
 Where a repository's domain docs live: `in-repo`, `sidecar`, or `unconfigured`.
 Not recorded as a value anywhere — implied by which `config.md` exists.
 
-## Ticket
+## Slice
 
-One vertical slice of a run, one markdown file, with a header carrying its
-status and blocking edges. The unit a session claims and builds.
+One unit of work in a run: one markdown file, with a header carrying its status
+and blocking edges. The thing a session claims, builds and closes. Usually one
+branch and one pull request.
 
-**Not**: "issue", "task", "work item". An **issue** is a Linear issue, which is
-a different thing on a different layer; a ticket never becomes one implicitly.
+**Not**: "ticket", "issue", "task", "work item". **Ticket** and **issue** both
+mean a Linear issue, which is a different thing on a different layer — so
+"close the slice" can never be misread as "close TMRW-2525". A slice never
+becomes a Linear issue implicitly.
 
 ## Triage state
 
-A ticket's readiness, in its `triage:` header: `needs-info`,
+A slice's readiness, in its `triage:` header: `needs-info`,
 `ready-for-agent`, `ready-for-human`, `wontfix`. Local, and never published.
 
 ## User-invoked / model-invoked
@@ -133,7 +136,7 @@ invariant the whole split rests on.
 
 ## Vertical slice
 
-A ticket that cuts a narrow but complete path through every layer, so finishing
-it leaves something demoable. Also called a **tracer bullet**.
-
-**Not**: a horizontal slice of one layer.
+The property a slice should have: a narrow but complete path through every
+layer, so finishing it leaves something demoable. Also called a **tracer
+bullet**. The opposite is a horizontal slice of one layer, which is not
+independently shippable.

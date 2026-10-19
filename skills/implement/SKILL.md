@@ -1,42 +1,42 @@
 ---
 name: implement
-description: Build one ticket from a run — claim it, work it in its own worktree, review it, close it. Use when the user names a ticket to build, and when implement-spec dispatches a ticket to an implementer subagent.
+description: Build one slice from a run — claim it, work it in its own worktree, review it, close it. Use when the user names a slice to build, and when implement-spec dispatches a slice to an implementer subagent.
 ---
 
 # Implement
 
-One ticket, start to finish. For a whole run at once, use `/implement-spec`.
+One slice, start to finish. For a whole run at once, use `/implement-spec`.
 
 ## 1. Resolve and claim
 
-Resolve the run and the ticket from what the user gave you. `cw frontier <run>` lists what is takeable; if they named nothing, offer the frontier and let them pick rather than choosing for them.
+Resolve the run and the slice from what the user gave you. `cw frontier <run>` lists what is takeable; if they named nothing, offer the frontier and let them pick rather than choosing for them.
 
 **Claim before anything else:**
 
 ```sh
-cw claim <run> <ticket>
+cw claim <run> <slice>
 ```
 
-A non-zero exit means another session holds it. Stop and say so — do not work a ticket you do not hold, because the claim is the only thing preventing two worktrees building the same slice.
+A non-zero exit means another session holds it. Stop and say so — do not work a slice you do not hold, because the claim is the only thing preventing two worktrees building the same slice.
 
 ## 2. Read
 
-Read the ticket in full, and the run's `spec.md`. Follow the context pointers rather than re-deriving what they already say.
+Read the slice in full, and the run's `spec.md`. Follow the context pointers rather than re-deriving what they already say.
 
 Read `GLOSSARY.md` at `$(cw)` for the project's vocabulary, and the ADRs touching the area. Use those words in branch names, commits and tests.
 
-If the ticket carries a `triage:` state of `needs-info`, it is not ready: say what is missing and stop.
+If the slice carries a `triage:` state of `needs-info`, it is not ready: say what is missing and stop.
 
 ## 3. Get a worktree
 
 ```sh
 wt-add <branch>                       # ordinarily
-wt-add <branch> <stack-parent-branch> # when the ticket has a stack-parent
+wt-add <branch> <stack-parent-branch> # when the slice has a stack-parent
 ```
 
-Name the branch from the ticket, using the glossary's words. Where the ticket has a `stack-parent`, pass that ticket's `branch` as the base ref — that is what makes the two branches a stack rather than two unrelated changes.
+Name the branch from the slice, using the glossary's words. Where the slice has a `stack-parent`, pass that slice's `branch` as the base ref — that is what makes the two branches a stack rather than two unrelated changes.
 
-Record the branch in the ticket's `branch:` header so later sessions, `cw status` and any stack built on top can find it.
+Record the branch in the slice's `branch:` header so later sessions, `cw status` and any stack built on top can find it.
 
 ## 4. Build
 
@@ -50,10 +50,10 @@ Call the Skill tool with "review-loop". It reviews and fixes in the session that
 
 ## 6. Close
 
-Commit to the ticket's branch. Then:
+Commit to the slice's branch. Then:
 
 ```sh
-cw close <run> <ticket>
+cw close <run> <slice>
 ```
 
 which marks it done and releases the claim in one step, moving whatever it blocked onto the frontier.
@@ -62,4 +62,4 @@ Report the branch, what landed, and the new frontier. Opening a pull request is 
 
 ## If you stop early
 
-A claim outlives the session that took it, on purpose. If you are abandoning the ticket rather than finishing it, `cw release <run> <ticket>` so nobody has to guess. If you are pausing, leave the claim and say so; `cw status` will show it against a worktree with no live session, which is the signal a human needs.
+A claim outlives the session that took it, on purpose. If you are abandoning the slice rather than finishing it, `cw release <run> <slice>` so nobody has to guess. If you are pausing, leave the claim and say so; `cw status` will show it against a worktree with no live session, which is the signal a human needs.

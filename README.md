@@ -15,10 +15,10 @@ Entry points. Type them; nothing else can.
 - **grill-me** — The same interview, stateless. For when there is no repo under the work.
 - **grill-issue** — The on-ramp for work that already exists: loads the Linear issue, its Slite PRD and any sub-issues, grills them, and writes a run the rest of the pipeline can pick up.
 - **to-spec** — Synthesize a spec from the conversation, codebase exploration, and test-seam design, saved into the run graph.
-- **to-tickets** — Break a spec into tracer-bullet tickets in the run graph, each declaring its blocking edges.
-- **triage** — Take a ticket from raw to agent-ready: verify the claim, grill it into shape, write the brief. States stay local.
+- **to-slices** — Break a spec into tracer-bullet slices in the run graph, each declaring its blocking edges. Only for work too big for one pull request; `/grill-issue` makes one slice by default.
+- **triage** — Take a slice from raw to agent-ready: verify the claim, grill it into shape, write the brief. States stay local.
 - **implement-spec** — Build a whole run: work its frontier until the graph is empty, as a stack of PRs or on one integration branch.
-- **wayfinder** — Chart work too big and too foggy for one session as a map of decision tickets, then resolve them one at a time. Produces decisions, not deliverables.
+- **wayfinder** — Chart work too big and too foggy for one session as a map of decision slices, then resolve them one at a time. Produces decisions, not deliverables.
 - **diagnosing-bugs** — For the bug that resists: build a red loop before theorising, minimise, then fix with a regression test.
 - **retro** — Look back over a session and improve the agent's environment, not the code.
 - **wizard** — Generate an interactive script for the steps only a human can take.
@@ -36,7 +36,7 @@ Primitives and references. Skills call these; so can you.
 - **research** — Delegate reading to a background agent, which cites primary sources and leaves a Markdown file in the workspace.
 - **tdd** — Test-driven development with the red-green-refactor loop.
 - **prototype** — Build a throwaway prototype to answer a design question.
-- **implement** — Build one ticket: claim, worktree, TDD, review, close. Model-invoked because `implement-spec` dispatches each ticket to it.
+- **implement** — Build one slice: claim, worktree, TDD, review, close. Model-invoked because `implement-spec` dispatches each slice to it.
 - **codebase-design** — The deep-module vocabulary: module, interface, depth, seam, adapter, leverage, locality. `tdd` and `improve-codebase-architecture` both reach for it.
 - **gh-stack** — Manage stacked branches and PRs with the gh-stack CLI extension.
 - **code-review** — Multi-agent review over a diff, proving or refuting findings by running tests and API calls.
@@ -58,10 +58,10 @@ cw --state    # run state, in the shared git dir — same from every worktree
 cw --mode     # "in-repo", "sidecar", or "unconfigured"
 
 cw status                 # every worktree, its branch, tmux session and claims
-cw frontier <run>         # tickets that are open, unblocked and unclaimed
+cw frontier <run>         # slices that are open, unblocked and unclaimed
 cw shape <run>            # "chain" (stackable) or "fan-out" (needs integration)
-cw claim <run> <ticket>   # atomic; non-zero exit if someone already holds it
-cw close <run> <ticket>   # mark done, and release
+cw claim <run> <slice>   # atomic; non-zero exit if someone already holds it
+cw close <run> <slice>   # mark done, and release
 ```
 
 Flags resolve paths and never write; verbs act on the run graph, whose format is in `docs/run-graph.md`. `scripts/session-context` is the `SessionStart` hook that tells a new session what other worktrees are holding.
@@ -74,7 +74,7 @@ The sidecar lives at `~/.claude-workspace`, overridable with `CLAUDE_WORKSPACE_R
 
 ## Design
 
-`docs/agent-workspace-design.md` is the design note for the in-progress workspace build: its constraints, phases, and acceptance criteria. `docs/run-graph.md` specifies the ticket format. `tests/phase-N.sh` holds each phase's criteria as a runnable script, re-run at the end of every later phase, and `tests/glossary.sh` enforces the vocabulary in `.agents/workspace/GLOSSARY.md`.
+`docs/agent-workspace-design.md` is the design note for the in-progress workspace build: its constraints, phases, and acceptance criteria. `docs/run-graph.md` specifies the slice format. `tests/phase-N.sh` holds each phase's criteria as a runnable script, re-run at the end of every later phase, and `tests/glossary.sh` enforces the vocabulary in `.agents/workspace/GLOSSARY.md`.
 
 ## Setup
 

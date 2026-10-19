@@ -9,7 +9,7 @@ Linear is a separate layer and holds none of this. See `tracker.md` in the works
 ```
 $(cw --state)/runs/<run-slug>/
 ├── run.md
-├── tickets/
+├── slices/
 │   ├── 01-add-resolver.md
 │   └── 02-wire-frontier.md
 └── claims/
@@ -17,7 +17,7 @@ $(cw --state)/runs/<run-slug>/
         └── holder
 ```
 
-A ticket's **id** is its filename without `.md`. Ids sort, and the numeric prefix puts blockers before the work they gate, so reading `tickets/` in order reads the intended sequence.
+A slice's **id** is its filename without `.md`. Ids sort, and the numeric prefix puts blockers before the work they gate, so reading `slices/` in order reads the intended sequence.
 
 ## run.md
 
@@ -34,7 +34,7 @@ prd: <Slite URL, if the work came from one>
 
 `linear:` is a pointer and nothing more. Nothing about the run graph is written back to Linear unless publishing is asked for.
 
-## A ticket
+## A slice
 
 ```markdown
 ---
@@ -59,37 +59,37 @@ Pointers into `spec.md` rather than a copy of it.
 
 The header is flat `key: value` lines, never nested, so it stays greppable and needs no YAML parser. **Only the first `---` fenced block is read, and only it is ever rewritten**, so prose in the body that happens to start with `status:` or `blocked-by:` is just prose: it is neither read as a field nor edited by `cw close`.
 
-A ticket id is its filename stem and must match `[A-Za-z0-9._-]+`. Operations that delete reject anything else rather than letting a path escape the run directory.
+A slice id is its filename stem and must match `[A-Za-z0-9._-]+`. Operations that delete reject anything else rather than letting a path escape the run directory.
 
 - **status**: `open` or `done`.
-- **blocked-by**: space-separated ticket ids, or empty. A ticket is unblocked when every blocker is `done`.
+- **blocked-by**: space-separated slice ids, or empty. A slice is unblocked when every blocker is `done`.
 - **branch**: the branch the work lands on, once one exists.
-- **stack-parent**: the ticket whose branch this one stacks on, when the graph is a chain. `wt-add <branch> <parent-branch>` takes it as the base ref.
-- **triage**: `needs-info`, `ready-for-agent`, `ready-for-human` or `wontfix`, set by `/triage`. Absent means untriaged, which is the normal state for a ticket `/to-tickets` wrote: those are agent-ready by construction. This key never reaches Linear.
+- **stack-parent**: the slice whose branch this one stacks on, when the graph is a chain. `wt-add <branch> <parent-branch>` takes it as the base ref.
+- **triage**: `needs-info`, `ready-for-agent`, `ready-for-human` or `wontfix`, set by `/triage`. Absent means untriaged, which is the normal state for a slice `/to-slices` wrote: those are agent-ready by construction. This key never reaches Linear.
 
-- **type**: `research`, `prototype`, `grilling` or `task`, set by `/wayfinder` on a decision ticket. Absent on an ordinary build ticket.
+- **type**: `research`, `prototype`, `grilling` or `task`, set by `/wayfinder` on a decision slice. Absent on an ordinary build slice.
 
-Unknown keys are ignored rather than rejected, so a ticket can carry notes for a skill that other skills do not need to understand.
+Unknown keys are ignored rather than rejected, so a slice can carry notes for a skill that other skills do not need to understand.
 
 ## Maps
 
-A **wayfinder map** is a run, not a separate thing: `run.md` carries `kind: wayfinder` and the map's destination, decisions and fog, and its tickets resolve decisions rather than building code. Everything else — the frontier, claims, blocking edges — works identically.
+A **wayfinder map** is a run, not a separate thing: `run.md` carries `kind: wayfinder` and the map's destination, decisions and fog, and its slices resolve decisions rather than building code. Everything else — the frontier, claims, blocking edges — works identically.
 
 ## Claims
 
-A claim is a **directory**, not a field, because `mkdir` is atomic and a field in a file is not. Two worktrees racing for the same ticket both call `mkdir`; exactly one succeeds. The winner then writes `holder` with its branch, worktree, tmux session and timestamp.
+A claim is a **directory**, not a field, because `mkdir` is atomic and a field in a file is not. Two worktrees racing for the same slice both call `mkdir`; exactly one succeeds. The winner then writes `holder` with its branch, worktree, tmux session and timestamp.
 
 A field would need read-modify-write, which has no atomic form in a shell script, and both racers would believe they had won.
 
-Claims are deliberately **not** recorded in the ticket file: the ticket is the work, the claim is transient state about who is doing it, and keeping them apart means a claim can never conflict with an edit to the ticket's body.
+Claims are deliberately **not** recorded in the slice file: the slice is the work, the claim is transient state about who is doing it, and keeping them apart means a claim can never conflict with an edit to the slice's body.
 
 ## Operations
 
 ```sh
 cw frontier <run>              # open, unblocked, unclaimed — what can be started
-cw claim <run> <ticket>        # atomic; non-zero exit if already held
-cw release <run> <ticket>
-cw close <run> <ticket>        # mark done, and release
+cw claim <run> <slice>        # atomic; non-zero exit if already held
+cw release <run> <slice>
+cw close <run> <slice>        # mark done, and release
 cw status                      # every worktree, its branch, session and claims
 ```
 
@@ -100,8 +100,8 @@ It lists only **live** worktrees. Git keeps registrations for worktrees whose di
 ## Working a run
 
 1. `cw frontier <run>` for what is takeable.
-2. `cw claim <run> <ticket>` **before** any work. A non-zero exit means another session got there first: take the next one.
+2. `cw claim <run> <slice>` **before** any work. A non-zero exit means another session got there first: take the next one.
 3. Build it. `wt-add <branch>` for a worktree, passing `stack-parent`'s branch as the base ref when there is one.
-4. `cw close <run> <ticket>`, which releases the claim and moves whatever it was blocking onto the frontier.
+4. `cw close <run> <slice>`, which releases the claim and moves whatever it was blocking onto the frontier.
 
-A session that dies mid-ticket leaves its claim behind. That is deliberate: a stale claim is visible in `cw status` next to a worktree with no live session, which is a human's cue to `cw release` it rather than something to time out automatically.
+A session that dies mid-slice leaves its claim behind. That is deliberate: a stale claim is visible in `cw status` next to a worktree with no live session, which is a human's cue to `cw release` it rather than something to time out automatically.

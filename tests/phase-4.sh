@@ -27,21 +27,21 @@ echo "nothing leaks to Linear"
 # The constraint that matters most: no skill may apply a workflow label, and
 # every one that can touch Linear must say publishing is deliberate.
 labelled=""
-for s in to-spec to-tickets triage; do
+for s in to-spec to-slices triage; do
 	grep -qE '^[^>]*[Aa]pply the .*(ready-for-agent|triage) label' "$skills/$s/SKILL.md" && labelled+="$s "
 done
 check "no skill applies a workflow label" "" "${labelled% }"
 check "to-spec says publishing is a separate act" "yes" "$(has to-spec 'separate, deliberate act')"
-check "to-tickets writes nothing to Linear" "yes" "$(has to-tickets 'write nothing to linear')"
+check "to-slices writes nothing to Linear" "yes" "$(has to-slices 'write nothing to linear')"
 check "triage keeps its states local" "yes" "$(has triage 'nothing about triage is written to linear')"
 
 echo
 echo "the pipeline writes to the run graph"
 check "to-spec saves the spec under the run" "yes" "$(has to-spec 'cw --state.*/runs/')"
 check "to-spec does not save to the repo root" "yes" "$(has to-spec 'not the repo root')"
-check "to-tickets writes one file per ticket" "yes" "$(has to-tickets 'runs/<slug>/tickets/')"
-check "to-tickets verifies its own edges" "yes" "$(has to-tickets 'cw frontier')"
-check "to-tickets sets stack-parent for a chain" "yes" "$(has to-tickets 'stack-parent')"
+check "to-slices writes one file per slice" "yes" "$(has to-slices 'runs/<slug>/slices/')"
+check "to-slices verifies its own edges" "yes" "$(has to-slices 'cw frontier')"
+check "to-slices sets stack-parent for a chain" "yes" "$(has to-slices 'stack-parent')"
 
 echo
 echo "work that already exists has an on-ramp"
@@ -52,17 +52,27 @@ check "it records the prd pointer" "yes" "$(gi '^prd:')"
 # An implementer subagent runs AFK and may have no Slite access at all.
 check "the spec is snapshotted, not linked" "yes" "$(gi 'snapshot rather than link')"
 check "it says why snapshotting matters" "yes" "$(gi 'no slite access')"
-check "it mirrors existing sub-issues" "yes" "$(gi 'one ticket per sub-issue')"
+check "it mirrors existing sub-issues" "yes" "$(gi 'mirror them one per slice')"
 # Linear's MCP exposes no relations, so edges cannot come across.
 check "it reviews the edges it could not import" "yes" "$(gi 'no issue relations')"
-check "it reviews the slicing too" "yes" "$(gi 'not always a set of vertical slices')"
+check "it questions whether sub-issues are really separate" "yes" "$(gi 'one deliverable viewed from several angles')"
 check "it writes nothing back to Linear" "yes" "$(gi 'nothing is written back to linear')"
-check "to-tickets defers when a breakdown exists" "yes" "$(has to-tickets 'point the user at ./grill-issue')"
+# A Linear issue is already one piece of work and one PR. Breaking it into
+# several local slices made the workflow more manual, not less.
+check "one slice is the default" "yes" "$(gi 'default is therefore exactly one slice')"
+check "it does not propose a breakdown" "yes" "$(gi 'do not suggest ./to-slices')"
+check "splitting needs a named reason" "yes" "$(gi 'needs a reason you can name')"
+check "it hands off to implement, not to-slices" "yes" "$(gi 'next step is ./implement')"
+check "it sets the repo up rather than sending the user away" "yes" "$(gi 'skill tool with "setup-workspace"')"
+check "to-slices defers when a breakdown exists" "yes" "$(has to-slices 'point the user at ./grill-issue')"
 
 echo
 echo "tdd speaks the seam vocabulary"
 check "tdd defines a seam" "yes" "$(has tdd 'a \*\*seam\*\* is')"
-check "tdd requires pre-agreed seams" "yes" "$(has tdd 'pre-agreed seams')"
+check "tdd names its seams up front" "yes" "$(has tdd 'name the seams before writing any test')"
+# Confirming an obvious seam every time is friction, not rigour.
+check "tdd only asks when there is a real fork" "yes" "$(has tdd 'only stop and ask when there is a real fork')"
+check "tdd self-checks its own coverage" "yes" "$(has tdd 'miss a critical path')"
 check "tdd defers to the spec's seams" "yes" "$(has tdd 'to-spec. already sketches the seams')"
 check "tdd covers tautological tests" "yes" "$(has tdd 'tautological')"
 check "tests.md has a worked tautological example" "yes" \
@@ -80,7 +90,7 @@ done
 
 echo
 echo "invocation"
-for s in to-spec to-tickets triage; do
+for s in to-spec to-slices triage; do
 	check "$s is user-invoked" "yes" \
 		"$(grep -q '^disable-model-invocation: true' "$skills/$s/SKILL.md" && echo yes || echo no)"
 done

@@ -39,9 +39,9 @@ in_a() { (cd "$scratch/wt-a" && "$cw" "$@"); }
 in_b() { (cd "$scratch/wt-b" && "$cw" "$@"); }
 
 run="$(in_repo --state)/runs/demo"
-mkdir -p "$run/tickets"
-ticket() {
-	cat >"$run/tickets/$1.md" <<EOF
+mkdir -p "$run/slices"
+slice() {
+	cat >"$run/slices/$1.md" <<EOF
 ---
 status: $2
 blocked-by: $3
@@ -50,19 +50,19 @@ blocked-by: $3
 # $1
 EOF
 }
-ticket 01-first open ""
-ticket 02-second open "01-first"
-ticket 03-third open "02-second"
+slice 01-first open ""
+slice 02-second open "01-first"
+slice 03-third open "02-second"
 
 echo "frontier"
-check "a chain exposes exactly one frontier ticket" "01-first" "$(in_repo frontier demo)"
+check "a chain exposes exactly one frontier slice" "01-first" "$(in_repo frontier demo)"
 
 echo
 echo "claims"
 check "claiming from worktree A succeeds" "01-first" "$(in_a claim demo 01-first)"
 in_b claim demo 01-first >/dev/null 2>&1
-check "claiming the same ticket from worktree B fails" "1" "$?"
-check "a claimed ticket leaves the frontier" "" "$(in_repo frontier demo)"
+check "claiming the same slice from worktree B fails" "1" "$?"
+check "a claimed slice leaves the frontier" "" "$(in_repo frontier demo)"
 check "the holder records the claiming worktree" "worktree: $scratch/wt-a" \
 	"$(grep '^worktree:' "$run/claims/01-first/holder")"
 in_a release demo 01-first
@@ -72,9 +72,9 @@ echo
 echo "progress"
 in_a claim demo 01-first >/dev/null
 in_a close demo 01-first
-check "closing a blocker moves the next ticket up" "02-second" "$(in_repo frontier demo)"
+check "closing a blocker moves the next slice up" "02-second" "$(in_repo frontier demo)"
 check "done releases the claim too" "no" "$([[ -d "$run/claims/01-first" ]] && echo yes || echo no)"
-check "a done ticket is not on the frontier" "02-second" "$(in_repo frontier demo)"
+check "a done slice is not on the frontier" "02-second" "$(in_repo frontier demo)"
 
 echo
 echo "status"
@@ -115,44 +115,44 @@ check "a prunable worktree is not listed" "" \
 
 # The header is the contract; prose that happens to look like it is not. The
 # header omits blocked-by, so a whole-file read would pick the body line up and
-# wrongly treat this ticket as blocked by one that is still open.
+# wrongly treat this slice as blocked by one that is still open.
 printf -- '---\nstatus: open\n---\n\nNotes on what this supersedes:\n\nblocked-by: 03-third\n' \
-	>"$run/tickets/04-prose.md"
+	>"$run/slices/04-prose.md"
 check "a body line is not read as a header field" "1" \
 	"$(in_repo frontier demo | grep -c 04-prose)"
 
 # close rewrites the header only; prose in the body that starts with the key
 # is prose. Line 7 here is body text, and must survive untouched.
 printf -- '---\nstatus: open\nblocked-by:\n---\n\nExample header:\n\nstatus: open\n' \
-	>"$run/tickets/05-doc.md"
+	>"$run/slices/05-doc.md"
 in_repo close demo 05-doc
 check "close rewrites the header status" "done" \
-	"$(sed -n '2s/^status: //p' "$run/tickets/05-doc.md")"
+	"$(sed -n '2s/^status: //p' "$run/slices/05-doc.md")"
 check "close leaves body prose alone" "status: open" \
-	"$(sed -n '8p' "$run/tickets/05-doc.md")"
+	"$(sed -n '8p' "$run/slices/05-doc.md")"
 
 # A helper that exits inside $( ) only ends the substitution, so the caller
 # would carry on with an empty id and fail later with a confusing message.
 out=$(in_repo claim demo does-not-exist 2>&1)
-check "an unknown ticket fails with one clear error" "1" \
+check "an unknown slice fails with one clear error" "1" \
 	"$(grep -c '^Error:' <<<"$out")"
 
 in_repo release demo "../../../etc" >/dev/null 2>&1
-check "release rejects a traversing ticket id" "1" "$?"
+check "release rejects a traversing slice id" "1" "$?"
 check "release left the run directory intact" "yes" \
-	"$([[ -d "$run/tickets" ]] && echo yes || echo no)"
+	"$([[ -d "$run/slices" ]] && echo yes || echo no)"
 
 # triage adds a header key cw knows nothing about. Unknown keys must be
 # ignored, in any position, and must survive a close rewriting status.
 printf -- '---\ntriage: ready-for-agent\nstatus: open\nblocked-by:\n---\n\n# Triaged\n' \
-	>"$run/tickets/06-triaged.md"
-check "an unknown header key does not hide a ticket" "1" \
+	>"$run/slices/06-triaged.md"
+check "an unknown header key does not hide a slice" "1" \
 	"$(in_repo frontier demo | grep -c 06-triaged)"
 in_repo close demo 06-triaged
 check "an unknown key survives a close" "ready-for-agent" \
-	"$(sed -n '2s/^triage: //p' "$run/tickets/06-triaged.md")"
+	"$(sed -n '2s/^triage: //p' "$run/slices/06-triaged.md")"
 check "close still rewrote status with keys reordered" "done" \
-	"$(sed -n '3s/^status: //p' "$run/tickets/06-triaged.md")"
+	"$(sed -n '3s/^status: //p' "$run/slices/06-triaged.md")"
 
 # A main checkout's basename is a prefix of every sibling's, so a substring
 # filter would drop exactly the worktrees the hook exists to report. Tested in

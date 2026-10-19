@@ -10,7 +10,7 @@ usage() {
 Usage: cw [--state | --sidecar | --repo | --key | --mode]
        cw status
        cw frontier|shape <run>
-       cw claim|release|close <run> <ticket>
+       cw claim|release|close <run> <slice>
 
 Flags resolve paths and never write. Verbs act on the run graph.
 
@@ -23,12 +23,12 @@ Flags resolve paths and never write. Verbs act on the run graph.
   --mode              Print "in-repo", "sidecar", or "unconfigured"
 
   status              Live worktrees, their branches, tmux sessions and claims
-  frontier <run>      Tickets that are open, unblocked and unclaimed
+  frontier <run>      Slices that are open, unblocked and unclaimed
   shape <run>         "chain" if the blocking edges form one path, "fan-out" if
-                      they branch or merge, "empty" if there are no tickets
-  claim <run> <t>     Take a ticket. Fails if someone already holds it
-  release <run> <t>   Give it back
-  close <run> <t>     Mark it done, which also releases it
+                      they branch or merge, "empty" if there are no slices
+  claim <run> <s>     Take a slice. Fails if someone already holds it
+  release <run> <s>   Give it back
+  close <run> <s>     Mark it done, which also releases it
 
 The storage mode is not recorded anywhere; it is implied by which config.md
 exists. A repo holding .agents/workspace/config.md is in-repo. One whose sidecar
@@ -97,11 +97,11 @@ docs_root() {
 # runs in a subshell where `exit` ends only the substitution: the caller would
 # carry on with an empty value and fail later, confusingly.
 run_dir=""
-ticket_md=""
+slice_md=""
 
 valid_id() {
 	[[ "$1" =~ ^[A-Za-z0-9._-]+$ ]] || {
-		echo "Error: invalid ticket id '$1'" >&2
+		echo "Error: invalid slice id '$1'" >&2
 		exit 1
 	}
 }
@@ -114,18 +114,18 @@ require_run() {
 	}
 }
 
-require_ticket() {
+require_slice() {
 	valid_id "$1"
-	ticket_md="$run_dir/tickets/$1.md"
-	[[ -f "$ticket_md" ]] || {
-		echo "Error: no ticket '$1' in $run_dir/tickets" >&2
+	slice_md="$run_dir/slices/$1.md"
+	[[ -f "$slice_md" ]] || {
+		echo "Error: no slice '$1' in $run_dir/slices" >&2
 		exit 1
 	}
 }
 
 # Only the first --- fenced block is the header. Prose in the body that starts
 # with a key is prose, and must neither be read nor rewritten.
-ticket_field() {
+slice_field() {
 	awk -v key="$2:" '
 		NR == 1 && $0 == "---" { inhdr = 1; next }
 		inhdr && $0 == "---"   { exit }
@@ -146,9 +146,9 @@ set_status_done() {
 	' "$1" >"$1.tmp" && mv "$1.tmp" "$1"
 }
 
-ticket_ids() {
-	[[ -d "$1/tickets" ]] || return 0
-	find "$1/tickets" -maxdepth 1 -name '*.md' | sort | while read -r f; do
+slice_ids() {
+	[[ -d "$1/slices" ]] || return 0
+	find "$1/slices" -maxdepth 1 -name '*.md' | sort | while read -r f; do
 		basename "$f" .md
 	done
 }
@@ -161,9 +161,9 @@ is_claimed() { [[ -d "$1/claims/$2" ]]; }
 
 is_blocked() {
 	local dir="$1" id="$2" blocker
-	for blocker in $(ticket_field "$dir/tickets/$id.md" blocked-by); do
-		[[ -f "$dir/tickets/$blocker.md" ]] || continue
-		[[ "$(ticket_field "$dir/tickets/$blocker.md" status)" == "done" ]] || return 0
+	for blocker in $(slice_field "$dir/slices/$id.md" blocked-by); do
+		[[ -f "$dir/slices/$blocker.md" ]] || continue
+		[[ "$(slice_field "$dir/slices/$blocker.md" status)" == "done" ]] || return 0
 	done
 	return 1
 }
@@ -171,8 +171,8 @@ is_blocked() {
 cmd_frontier() {
 	local id
 	require_run "$1"
-	for id in $(ticket_ids "$run_dir"); do
-		[[ "$(ticket_field "$run_dir/tickets/$id.md" status)" == "open" ]] || continue
+	for id in $(slice_ids "$run_dir"); do
+		[[ "$(slice_field "$run_dir/slices/$id.md" status)" == "open" ]] || continue
 		is_blocked "$run_dir" "$id" && continue
 		is_claimed "$run_dir" "$id" && continue
 		printf '%s\n' "$id"
@@ -185,19 +185,19 @@ cmd_frontier() {
 cmd_shape() {
 	local id other blocker blockers roots=0 maxblockers=0 maxdeps=0 n
 	require_run "$1"
-	if [[ -z "$(ticket_ids "$run_dir")" ]]; then
+	if [[ -z "$(slice_ids "$run_dir")" ]]; then
 		printf 'empty\n'
 		return
 	fi
-	for id in $(ticket_ids "$run_dir"); do
-		blockers=$(ticket_field "$run_dir/tickets/$id.md" blocked-by)
+	for id in $(slice_ids "$run_dir"); do
+		blockers=$(slice_field "$run_dir/slices/$id.md" blocked-by)
 		n=$(printf '%s' "$blockers" | wc -w | tr -d ' ')
 		if [[ "$n" -eq 0 ]]; then roots=$((roots + 1)); fi
 		if [[ "$n" -gt "$maxblockers" ]]; then maxblockers=$n; fi
 
 		n=0
-		for other in $(ticket_ids "$run_dir"); do
-			for blocker in $(ticket_field "$run_dir/tickets/$other.md" blocked-by); do
+		for other in $(slice_ids "$run_dir"); do
+			for blocker in $(slice_field "$run_dir/slices/$other.md" blocked-by); do
 				if [[ "$blocker" == "$id" ]]; then n=$((n + 1)); fi
 			done
 		done
@@ -216,7 +216,7 @@ cmd_shape() {
 cmd_claim() {
 	local tree session
 	require_run "$1"
-	require_ticket "$2"
+	require_slice "$2"
 	mkdir -p "$run_dir/claims"
 	if ! mkdir "$run_dir/claims/$2" 2>/dev/null; then
 		echo "Error: '$2' is already claimed by:" >&2
@@ -243,8 +243,8 @@ cmd_release() {
 
 cmd_close() {
 	require_run "$1"
-	require_ticket "$2"
-	set_status_done "$ticket_md"
+	require_slice "$2"
+	set_status_done "$slice_md"
 	rm -rf "${run_dir:?}/claims/${2:?}"
 }
 

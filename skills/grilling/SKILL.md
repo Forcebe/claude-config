@@ -25,6 +25,10 @@ Word each question so that "yes" accepts your recommendation. Give a recommendat
 
 A question whose answer depends on another question still open in this round belongs to a **later** round. Each round's answers reshape the tree: settled decisions push the frontier outward and unblock what depended on them. Recompute and ask again.
 
-**Facts are your job; decisions are the user's.** When a frontier question needs a fact from the environment — the filesystem, the codebase, a tool, the tracker — go and find it rather than asking. Dispatch a subagent if it is slow. Don't block on it: a running exploration is just an unsettled prerequisite, so only the questions downstream of it wait. Ask the rest of the frontier now.
+**Ask at most four questions in a round, and fewer if they are long.** A round has to be readable in one screen without scrolling, because the user is typing their answers while reading it. More than that and the earlier questions scroll away. If the frontier is wider than four, ask the four that unblock the most and keep the rest for the next round.
+
+**Finish all your tool calls before you present the round.** Find the facts first, then write the questions in a single uninterrupted message. A round with exploration interleaved between the questions is unreadable, and re-numbering or amending questions after they are on screen is worse — the user may already be answering.
+
+**Facts are your job; decisions are the user's.** When a question needs a fact from the environment — the filesystem, the codebase, a tool, the tracker — go and find it rather than asking. If a fact turns out to be slow to get, drop the questions that depend on it to a later round rather than making the user wait mid-round.
 
 The session is done when the frontier is empty: every branch visited, nothing silently assumed. **Do not act on the outcome until the user confirms** you have reached shared understanding.

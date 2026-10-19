@@ -8,7 +8,7 @@ Use this server, not the claude.ai Linear connector. Both point at the same Line
 
 Linear is the **team's record**: issues as the team understands them, with status, assignee, project and cycle.
 
-It is **not** the execution surface. The **run graph** — tickets, blocking edges, triage state, claims, branch bindings — lives in the run state that `cw --state` prints, and Linear never sees any of it.
+It is **not** the execution surface. The **run graph** — slices, blocking edges, triage state, claims, branch bindings — lives in the run state that `cw --state` prints, and Linear never sees any of it.
 
 Three rules follow:
 
@@ -35,7 +35,7 @@ Confirm parameter names against the tool schema before the first call in a sessi
 
 The Linear MCP does not expose issue **relations**, so a blocking edge cannot be written to Linear even deliberately. Blocking lives in the run graph, which is where it belongs anyway.
 
-## Ticket ids
+## Slice ids
 
 Branches carry the Linear id (`TMRW-123`, `feat/TMRW-123-description`). `wt-add` derives the worktree directory from it, so the id is recoverable from any worktree path.
 
@@ -43,6 +43,6 @@ Branches carry the Linear id (`TMRW-123`, `feat/TMRW-123-description`). `wt-add`
 
 Create a Linear issue with `save_issue`, with no labels beyond what the team already uses. Report the URL.
 
-## When a skill says "fetch the relevant ticket"
+## When a skill says "fetch the relevant slice"
 
 Resolve the id from the branch name, then `get_issue` plus `list_comments`.

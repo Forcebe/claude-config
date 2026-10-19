@@ -33,29 +33,29 @@ git -C "$repo" remote add origin git@github.com:acme/widget.git
 git -C "$repo" commit --quiet --allow-empty -m init
 state="$repo/.git/agent-workspace/runs"
 
-mkrun() { mkdir -p "$state/$1/tickets"; }
-tk() { printf -- '---\nstatus: %s\nblocked-by: %s\n---\n\n# %s\n' "${3:-open}" "$2" "$1" >"$state/$run/tickets/$1.md"; }
+mkrun() { mkdir -p "$state/$1/slices"; }
+tk() { printf -- '---\nstatus: %s\nblocked-by: %s\n---\n\n# %s\n' "${3:-open}" "$2" "$1" >"$state/$run/slices/$1.md"; }
 shape() { (cd "$repo" && "$cw" shape "$1"); }
 
 echo "shape"
 run="chain"; mkrun $run; tk 01-a ""; tk 02-b "01-a"; tk 03-c "02-b"
 check "a single path is a chain" "chain" "$(shape chain)"
 run="one"; mkrun $run; tk 01-a ""
-check "a lone ticket is a chain" "chain" "$(shape one)"
+check "a lone slice is a chain" "chain" "$(shape one)"
 run="split"; mkrun $run; tk 01-a ""; tk 02-b "01-a"; tk 03-c "01-a"
-check "one ticket gating two is a fan-out" "fan-out" "$(shape split)"
+check "one slice gating two is a fan-out" "fan-out" "$(shape split)"
 run="merge"; mkrun $run; tk 01-a ""; tk 02-b ""; tk 03-c "01-a 02-b"
-check "two tickets gating one is a fan-out" "fan-out" "$(shape merge)"
+check "two slices gating one is a fan-out" "fan-out" "$(shape merge)"
 run="roots"; mkrun $run; tk 01-a ""; tk 02-b ""
-check "two independent tickets are a fan-out" "fan-out" "$(shape roots)"
+check "two independent slices are a fan-out" "fan-out" "$(shape roots)"
 # A chain that has been partly worked is still a chain: shape is about the
 # edges, not about progress.
 run="part"; mkrun $run; tk 01-a "" "done"; tk 02-b "01-a"; tk 03-c "02-b"
 check "progress does not change the shape" "chain" "$(shape part)"
-# A run with no tickets has no edges, so it has no shape. Calling it a fan-out
+# A run with no slices has no edges, so it has no shape. Calling it a fan-out
 # would have implement-spec announce integration mode and then do nothing.
 mkrun none
-check "a run with no tickets is empty, not a fan-out" "empty" "$(shape none)"
+check "a run with no slices is empty, not a fan-out" "empty" "$(shape none)"
 
 echo
 echo "implement claims before it builds"
@@ -65,7 +65,7 @@ check "builds through tdd" "yes" "$(has implement 'skill tool with "tdd"')"
 check "uses the spec's seams" "yes" "$(has implement 'seams the spec already sketched')"
 check "reviews through review-loop" "yes" "$(has implement 'skill tool with "review-loop"')"
 check "closes, which releases" "yes" "$(has implement 'cw close')"
-check "records the branch on the ticket" "yes" "$(has implement 'branch:. header')"
+check "records the branch on the slice" "yes" "$(has implement 'branch:. header')"
 check "passes the stack parent to wt-add" "yes" "$(has implement 'wt-add <branch> <stack-parent-branch>')"
 
 echo
@@ -73,7 +73,7 @@ echo "implement-spec picks its mode from the graph"
 check "asks cw shape" "yes" "$(has implement-spec 'cw shape')"
 check "chain means stack mode" "yes" "$(has implement-spec 'chain.*stack mode')"
 check "fan-out means integration mode" "yes" "$(has implement-spec 'fan-out.*integration mode')"
-check "handles the empty answer too" "yes" "$(has implement-spec 'empty.*no tickets')"
+check "handles the empty answer too" "yes" "$(has implement-spec 'empty.*no slices')"
 check "does not switch modes silently" "yes" "$(has implement-spec 'do not override silently')"
 check "works the frontier in a loop" "yes" "$(has implement-spec 'cw frontier <run>. is empty')"
 check "reviews the whole thing at the end" "yes" "$(has implement-spec 'skill tool with "code-review"')"
@@ -91,7 +91,7 @@ echo
 echo "invocation"
 check "implement-spec is user-invoked" "yes" \
 	"$(grep -q '^disable-model-invocation: true' "$skills/implement-spec/SKILL.md" && echo yes || echo no)"
-# Forced by the invariant, not chosen: implement-spec dispatches each ticket to
+# Forced by the invariant, not chosen: implement-spec dispatches each slice to
 # implement through the Skill tool, and a user-invoked skill cannot be reached
 # that way.
 check "implement is model-invoked, because implement-spec calls it" "no" \

@@ -6,13 +6,13 @@ disable-model-invocation: true
 
 # Implement Spec
 
-A whole run, orchestrated. For a single ticket, use `/implement`.
+A whole run, orchestrated. For a single slice, use `/implement`.
 
-The tickets are **not a list of steps**. They are a graph with blocking edges, so there is always a **frontier** of tickets that can be started, and more than one may be takeable at once.
+The slices are **not a list of steps**. They are a graph with blocking edges, so there is always a **frontier** of slices that can be started, and more than one may be takeable at once.
 
 ## 1. Read the run
 
-Read `spec.md` and the run graph. Communicate with subagents through **context pointers** — the spec, a ticket, a commit — not by restating what those already say.
+Read `spec.md` and the run graph. Communicate with subagents through **context pointers** — the spec, a slice, a commit — not by restating what those already say.
 
 ## 2. Pick the mode
 
@@ -20,9 +20,9 @@ Read `spec.md` and the run graph. Communicate with subagents through **context p
 cw shape <run>
 ```
 
-- **`chain`** → **stack mode**. Each ticket's branch is based on its `stack-parent`'s branch, and each becomes its own pull request. Reviewable one slice at a time, which is what makes a long sequence bearable for whoever reviews it.
-- **`empty`** → there are no tickets. Stop and say so; `/to-tickets` has not run, or the run is already finished.
-- **`fan-out`** → **integration mode**. One integration branch, every ticket merged into it, one pull request at the end. A six-wide fan-out cannot be stacked; forcing it produces a tangle of rebases.
+- **`chain`** → **stack mode**. Each slice's branch is based on its `stack-parent`'s branch, and each becomes its own pull request. Reviewable one slice at a time, which is what makes a long sequence bearable for whoever reviews it.
+- **`empty`** → there are no slices. Stop and say so; `/to-slices` has not run, or the run is already finished.
+- **`fan-out`** → **integration mode**. One integration branch, every slice merged into it, one pull request at the end. A six-wide fan-out cannot be stacked; forcing it produces a tangle of rebases.
 
 Say which mode you picked and why. The user can override — a small fan-out is sometimes worth stacking anyway — but do not override silently.
 
@@ -30,12 +30,12 @@ Say which mode you picked and why. The user can override — a small fan-out is 
 
 Loop until `cw frontier <run>` is empty:
 
-1. Take the frontier. In stack mode that is always one ticket; in integration mode it may be several.
+1. Take the frontier. In stack mode that is always one slice; in integration mode it may be several.
 2. For each, spawn an **implementer subagent** that calls the Skill tool with "implement". Each gets its own worktree via `wt-add`, and in stack mode passes the stack-parent's branch as the base ref.
-3. In integration mode, run them in the background for concurrency, and merge each completed ticket into the integration branch with a **merger subagent** before the next frontier is computed.
-4. Recompute the frontier. Closing a ticket moves whatever it blocked onto it.
+3. In integration mode, run them in the background for concurrency, and merge each completed slice into the integration branch with a **merger subagent** before the next frontier is computed.
+4. Recompute the frontier. Closing a slice moves whatever it blocked onto it.
 
-Each implementer claims its own ticket, so two of them cannot collide even if the orchestration is wrong. Let the claim be the guard rather than tracking assignment yourself.
+Each implementer claims its own slice, so two of them cannot collide even if the orchestration is wrong. Let the claim be the guard rather than tracking assignment yourself.
 
 ### Subagents need `cw` permitted
 
@@ -52,4 +52,4 @@ Once the graph is empty, call the Skill tool with "code-review" over the stack o
 
 Then clean up every implementer worktree with `wt-rm`, and report what landed, the branches, and anything left open.
 
-Publishing to Linear is a separate, deliberate act. The run graph records `linear:` if an issue already covers this work; nothing about the tickets, claims or edges goes there.
+Publishing to Linear is a separate, deliberate act. The run graph records `linear:` if an issue already covers this work; nothing about the slices, claims or edges goes there.

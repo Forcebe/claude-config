@@ -38,13 +38,16 @@ echo
 echo "rejected synonyms stay rejected"
 check "no \"task graph\"" "" "$(corpus '\btask graph\b' | head -3)"
 check "no \"work item\"" "" "$(corpus '\bwork items?\b' | head -3)"
+# "ticket" now means a Linear issue and nothing else. The local unit is a slice.
+check "the local unit is never called a ticket" "" \
+	"$(corpus 'slices?/|cw (claim|close|frontier)' | grep -i ticket | head -3)"
 check "no \"workspace root\"" "" "$(corpus '\bworkspace root\b' | head -3)"
 
 # "issue" is legitimate for Linear issues, and "PRD" for the team's Slite doc.
-# What must not happen is either standing in for a ticket or a spec. Only the
+# What must not happen is either standing in for a slice or a spec. Only the
 # structural words are checked: "issue id" is a perfectly good Linear id, so a
 # looser pattern would cry wolf and teach us to ignore this suite.
-check "no ticket called an issue" "" \
+check "no slice called an issue" "" \
 	"$(corpus 'issue (file|header|slug)|issues/ |per issue\b|issue'"'"'s blocking' | head -3)"
 check "no spec called a PRD" "" \
 	"$(corpus 'from the PRD|the PRD (template|file)|write the PRD' | head -3)"

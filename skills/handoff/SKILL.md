@@ -11,7 +11,7 @@ Save it to `$(cw --state)/handoffs/<short-slug>.md`, creating the directory if n
 
 Include a **suggested skills** section naming the skills the next agent should call the Skill tool for, if any.
 
-Do not duplicate content already captured in other artifacts (specs, plans, ADRs, issues, commits, diffs). Reference them by path or URL instead. If the work is part of a run, point at the run and the ticket rather than restating them.
+Do not duplicate content already captured in other artifacts (specs, plans, ADRs, issues, commits, diffs). Reference them by path or URL instead. If the work is part of a run, point at the run and the slice rather than restating them.
 
 Redact anything sensitive: API keys, tokens, passwords, personal data.
 

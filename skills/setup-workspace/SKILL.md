@@ -1,7 +1,6 @@
 ---
 name: setup-workspace
-description: Configure this repository's agent workspace — storage mode, issue tracker, and domain doc layout. Run once per repo before the other engineering skills.
-disable-model-invocation: true
+description: Configure this repository's agent workspace — storage mode, issue tracker, and domain doc layout. Use when a repo reports an unconfigured workspace, or when another skill needs it set up before it can continue.
 ---
 
 # Setup Workspace
@@ -26,7 +25,7 @@ Read the repo's actual state; assume nothing.
 - `cw --mode`: has this repo been set up already? An unconfigured repo reports `unconfigured`.
 - Does `GLOSSARY.md`, `docs/adr/`, or `.agents/workspace/` already exist? An `.agents/` holding anything else belongs to the repo's owners; leave it alone.
 - `git log --oneline -20 --format='%an'`: is this a solo repo or a shared one?
-- Does the branch naming or recent history show ticket ids (`TMRW-123`)?
+- Does the branch naming or recent history show Linear ticket ids (`TMRW-123`)?
 
 ### 2. Present findings and ask
 
@@ -44,7 +43,7 @@ Recommend by owner:
 
 **Section B: Issue tracker.** This is the team-facing record only. The execution layer is separate and is not configured here.
 
-- A `tmrw-health` remote, or ticket ids in the branch history → **Linear**, via the `tmrw-standards` MCP server.
+- A `tmrw-health` remote, or Linear ticket ids in the branch history → **Linear**, via the `tmrw-standards` MCP server.
 - Anything else → **none**. A repo with no team-facing tracker is normal and needs no configuration.
 
 **Section C: Domain docs.** Default to single-context: one `GLOSSARY.md` and one `adr/` directory under the docs root. Offer multi-context only if exploration found a monorepo (a `pnpm-workspace.yaml`, a `workspaces` field, or a populated `packages/*` with its own `src/`).

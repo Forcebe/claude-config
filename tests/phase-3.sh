@@ -45,14 +45,16 @@ check "every called skill exists" "" "${missing% }"
 
 echo
 echo "the primitives are reachable"
-for s in grilling domain-modeling research tdd prototype; do
+# setup-workspace is model-invoked so grill-issue can configure a repo itself
+# rather than sending the user away mid-flow.
+for s in grilling domain-modeling research tdd prototype setup-workspace; do
 	check "$s is model-invoked" "model" \
 		"$(exists "$s" && { is_user_invoked "$s" && echo user || echo model; } || echo MISSING)"
 done
 
 echo
 echo "the entry points are not"
-for s in grill-me grill-with-docs grill-issue to-spec to-tickets setup-workspace handoff; do
+for s in grill-me grill-with-docs grill-issue to-spec to-slices handoff; do
 	check "$s is user-invoked" "user" \
 		"$(exists "$s" && { is_user_invoked "$s" && echo user || echo model; } || echo MISSING)"
 done

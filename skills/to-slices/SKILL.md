@@ -1,0 +1,104 @@
+---
+name: to-slices
+description: Break a spec, plan or conversation into tracer-bullet slices, each declaring its blocking edges.
+disable-model-invocation: true
+---
+
+# To Slices
+
+Break a spec, plan, or the current conversation into independently-grabbable **slices** in the run graph — tracer-bullet vertical slices, each declaring the slices that **block** it.
+
+The slices go in the run graph under `$(cw --state)/runs/`, never on Linear. The template at the end of this file is the format. Linear is the team's record and receives only what would have been created there by hand; publishing is a separate, deliberate act.
+
+## Process
+
+### 1. Gather context
+
+Work from whatever is already in the conversation. If the user passes a reference — a run slug, a spec path, a Linear issue id — resolve it and read it in full.
+
+If the reference is a **Linear issue that already has sub-issues**, stop and point the user at `/grill-issue`. That is the on-ramp for work the team has already broken down: it mirrors the existing breakdown instead of inventing a second one beside it. This skill slices a spec that has no breakdown yet.
+
+### 2. Locate or create the run
+
+A spec written by `/to-spec` already has a run at `$(cw --state)/runs/<slug>/`. Use it. If there is no run yet, create one: a directory under `$(cw --state)/runs/`, with a `run.md` naming the effort and recording `linear: <id>` if a Linear issue already covers it.
+
+Confirm the slug with the user before writing anything, since every later skill refers to the run by it.
+
+### 3. Explore the codebase (optional)
+
+If the codebase has not already been explored, do so to understand the current state of the code. Slice titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
+
+Look for opportunities to prefactor the code to make the implementation easier. "Make the change easy, then make the easy change." Prefactoring slices come first in the dependency order.
+
+### 4. Draft vertical slices
+
+Break the work into **tracer bullet** slices.
+
+<vertical-slice-rules>
+- Each slice cuts a narrow but COMPLETE path through every layer (schema, API, UI, tests) — vertical, NOT a horizontal slice of one layer
+- A completed slice is demoable or verifiable on its own
+- Each slice is sized to fit in a single fresh context window
+- Any prefactoring should be done first
+</vertical-slice-rules>
+
+Give each slice its **blocking edges** — the other slices that must complete before it can start. An slice with no blockers can start immediately.
+
+**Wide refactors are the exception to vertical slicing.** A wide refactor is one mechanical change — rename a column, retype a shared symbol — whose blast radius fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own slice blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in an slice blocked by every migrate batch. When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify slice — green is promised only there.
+
+### 5. Quiz the user
+
+Present the proposed breakdown as a numbered list. For each slice, show:
+
+- **Title**: short descriptive name
+- **Blocked by**: which other slices (if any) must complete first
+- **What it delivers**: the end-to-end behavior this slice makes work
+- **User stories covered**: which user stories from the spec this addresses
+
+Ask the user:
+
+- Does the granularity feel right? (too coarse / too fine)
+- Are the blocking edges correct — does each slice only depend on slices that genuinely gate it?
+- Should any slices be merged or split further?
+
+Iterate until the user approves the breakdown.
+
+### 6. Write the slices
+
+Write one file per slice to `$(cw --state)/runs/<slug>/slices/NN-slug.md`, creating `slices/` if it does not exist — `cw` resolves paths but creates nothing — numbered from `01` in dependency order so that reading the directory reads the intended sequence. Use the template below.
+
+**Write nothing to Linear.** Not the slices, not a parent issue, not a label. The run graph holds the whole task breakdown; Linear holds only what the team would have seen anyway.
+
+Set `blocked-by` to the ids of the blocking slices, space separated, or leave it empty. Where the graph is a chain, set `stack-parent` too: those slices become a stack of PRs, and `wt-add <branch> <parent-branch>` takes the parent's branch as its base.
+
+Then verify with `cw frontier <slug>`: it should list exactly the slices that can start immediately. If it lists more or fewer than expected, the edges are wrong — fix them before telling the user you are done.
+
+Report the run slug and the frontier.
+
+<slice-template>
+---
+status: open
+blocked-by: 01-prefactor-the-thing
+branch:
+stack-parent: 01-prefactor-the-thing
+---
+
+# Add the referral export endpoint
+
+## What to build
+
+A concise description of this vertical slice: the end-to-end behaviour it makes work, from the user's point of view, not a layer-by-layer implementation list.
+
+Avoid specific file paths or code snippets — they go stale fast. Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (a state machine, a reducer, a schema, a type shape), inline it and note that it came from a prototype. Trim it to the decision-rich part.
+
+## Acceptance criteria
+
+- [ ] Criterion 1
+- [ ] Criterion 2
+
+## Context
+
+Point at the spec rather than restating it: `spec.md`, and the sections that matter. Name the user stories by number.
+
+</slice-template>
+
+`branch` is left empty until the work starts; `implement` fills it in. The header is the contract — only the block between the fences is read, so prose in the body that happens to start with a key is just prose.

@@ -1,6 +1,6 @@
 ---
 name: grill-issue
-description: Stress-test the Linear issue on the current branch and turn it into a run — the on-ramp for work that already has a spec, and often tickets.
+description: Stress-test the Linear issue on the current branch and turn it into a run — the on-ramp for work that already has a spec, and often slices.
 disable-model-invocation: true
 ---
 
@@ -9,6 +9,10 @@ disable-model-invocation: true
 The on-ramp for work that **already exists**. Most TMRW work arrives as a Linear issue, often with a Slite PRD and sometimes with sub-issues the team already wrote. This loads all of it, grills it into shape, and lands it in the run graph so the rest of the pipeline can pick it up.
 
 For an idea with no issue behind it, the route is `/grill-with-docs` then `/to-spec`.
+
+## 0. Make sure the repo is set up
+
+Run `cw --mode`. If it reports `unconfigured`, call the Skill tool with "setup-workspace" and get it configured before going further — don't make the user come back. On a shared repo it will choose sidecar storage, so the repo gains nothing either way.
 
 ## 1. Load context
 
@@ -51,23 +55,29 @@ prd: <Slite URL, if there is one>
 
 Snapshot rather than link because an implementer subagent runs AFK and may have no Slite access at all — a run that cannot be built without a browser is not a run. Note in `spec.md` that it is a snapshot and when it was taken, so a reader knows to re-check Slite if the two disagree.
 
-## 4. Mirror the sub-issues, then review the slicing
+## 4. One slice, unless there is a real reason for more
 
-If the issue had sub-issues, write one ticket per sub-issue under `tickets/`, numbered in the order the team listed them, using the ticket format.
+**A Linear issue is already sized to be one piece of work and one pull request.** The default is therefore exactly one slice covering the whole issue, written to `slices/01-<slug>.md`. Do not break it down, do not propose a breakdown, and do not suggest `/to-slices`.
 
-**Then stop and review it with the user**, because two things cannot be imported:
+Splitting is the exception, and it needs a reason you can name:
 
-- **Blocking edges.** Linear's MCP exposes no issue relations, so `blocked-by` comes back empty on every ticket and the frontier would offer the whole set at once. Propose the edges you believe exist and confirm them.
-- **Slicing.** A breakdown written for people is not always a set of vertical slices. Say where you think it holds and where it does not, and let the user decide whether to re-slice.
+- The issue genuinely will not fit one session.
+- It contains a wide refactor that has to be sequenced expand–contract.
+- The team already wrote sub-issues (below).
 
-Set `stack-parent` where the confirmed edges form a chain.
+If one of those holds, say which, propose the split, and let the user decide. Several slices means several branches and several pull requests, so the bar is whether that is actually wanted — not whether the work could in principle be divided.
 
-If there were **no** sub-issues, leave `tickets/` empty and point the user at `/to-tickets`, which slices the spec you just wrote.
+**If the issue had sub-issues**, mirror them one per slice, in the order the team listed them, then stop and review two things that cannot be imported:
+
+- **Blocking edges.** Linear's MCP exposes no issue relations, so `blocked-by` comes back empty on every slice and the frontier would offer the whole set at once. Propose the edges you believe exist and confirm them.
+- **Whether they are really separate.** Sub-issues written for people are often one deliverable viewed from several angles. If they belong in one pull request, collapsing them into one slice is the better answer.
+
+Set `stack-parent` where confirmed edges form a chain.
 
 ## 5. Hand off
 
 Report the run slug, the spec path, and `cw frontier <slug>`.
 
-Then say what comes next: `/to-tickets` if there are no tickets yet, `/implement` for a single ticket, `/implement-spec` for the whole run.
+The next step is `/implement` — one slice, one branch, one pull request. Only reach for `/implement-spec` when the run genuinely has several slices with edges between them.
 
 Nothing is written back to Linear. The `linear:` pointer is the only link, and publishing anything is a separate, deliberate act.

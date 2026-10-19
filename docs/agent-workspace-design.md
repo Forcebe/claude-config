@@ -2,7 +2,7 @@
 
 ## Why
 
-The skills in this repo started as a fork of [mattpocock/skills](https://github.com/mattpocock/skills). That repo has moved on, and several of its additions are worth taking: a glossary and domain model woven into the grilling flow, a refined spec → tickets → implement pipeline, a split between skills the model can reach and skills only a human can fire, a long-horizon planning flow (`wayfinder`), and a project tracking layer underneath all of it.
+The skills in this repo started as a fork of [mattpocock/skills](https://github.com/mattpocock/skills). That repo has moved on, and several of its additions are worth taking: a glossary and domain model woven into the grilling flow, a refined spec → slices → implement pipeline, a split between skills the model can reach and skills only a human can fire, a long-horizon planning flow (`wayfinder`), and a project tracking layer underneath all of it.
 
 Adopting them directly does not work, for two reasons.
 
@@ -65,21 +65,31 @@ A third consequence is operational rather than a trade-off: a freshly created wo
 
 Config is split into three files rather than one, along the boundaries of which skill reads what. `config.md` is small and read first. `tracker.md` holds the tracker operations, is the bulk of the content, and varies most between repositories. `domain.md` holds the documentation layout and the rules for consuming it. Triage label strings live in `tracker.md`, because they are tracker-specific.
 
+### Which skills touch the domain docs
+
+Only the ones that actively change the model, and they all reach it the same way: by calling the Skill tool with `domain-modeling`, which writes `GLOSSARY.md` and ADRs under `cw`.
+
+- **`grill-with-docs`**, **`grill-issue`**, **`triage`** and **`wayfinder`** all call it, so any of them may add a term or an ADR as decisions land.
+- **`grill-me`** does not, deliberately: it is the stateless one, for work with no repository under it.
+- Everything else only **reads** the glossary for vocabulary, which is a one-line habit rather than a skill.
+
+So `/grill-issue` leaves the same paper trail as `/grill-with-docs`. The difference between them is where the work comes from, not what they write.
+
 ### Two ways in
 
 Work arrives two ways, and the pipeline needs an entrance for each.
 
-**New ideas** go `/grill-with-docs` → `/to-spec` → `/to-tickets`: the spec is written from the conversation, and the tickets are sliced from the spec.
+**New ideas** go `/grill-with-docs` → `/to-spec` → `/to-slices`: the spec is written from the conversation, and the slices are sliced from the spec.
 
 **Work that already exists** goes through `/grill-issue`. Most TMRW work arrives as a Linear issue with a Slite PRD and sometimes sub-issues the team already wrote, and the first version of this build had no route for it at all: `grill-issue` handed a decision log into plan mode, where it evaporated, and `implement` needs a run it had no way to produce.
 
-It now writes the run. The PRD is **snapshotted** into `spec.md` with a pointer back to Slite rather than linked, because an implementer subagent runs AFK and may have no Slite access — a run that cannot be built without a browser is not a run. Existing sub-issues are mirrored as tickets and then **reviewed**, because two things cannot be imported: Linear's MCP exposes no issue relations, so every `blocked-by` comes back empty and the frontier would offer the whole set at once; and a breakdown written for people is not always a set of vertical slices.
+It now writes the run. The PRD is **snapshotted** into `spec.md` with a pointer back to Slite rather than linked, because an implementer subagent runs AFK and may have no Slite access — a run that cannot be built without a browser is not a run. Existing sub-issues are mirrored as slices and then **reviewed**, because two things cannot be imported: Linear's MCP exposes no issue relations, so every `blocked-by` comes back empty and the frontier would offer the whole set at once; and a breakdown written for people is not always a set of vertical slices.
 
 ### Two tracking layers
 
 Linear is the team's record: issues as the team understands them, with status, assignee, project, and cycle. It gets nothing else.
 
-The **run graph** is the execution surface, under `$(cw --state)/runs/<slug>/` — the shared git directory, in both storage modes, for the reason given above. It holds the tickets, their blocking edges, triage state, claims, agent briefs and branch bindings, as one markdown file per ticket.
+The **run graph** is the execution surface, under `$(cw --state)/runs/<slug>/` — the shared git directory, in both storage modes, for the reason given above. It holds the slices, their blocking edges, triage state, claims, agent briefs and branch bindings, as one markdown file per slice.
 
 The two are bound by a pointer. Each run records the Linear issue it serves (`linear: TMRW-123`). A single comment back on the Linear issue is available for traceability, as an opt-in, never as a label.
 
@@ -89,17 +99,17 @@ Three things follow from this, beyond keeping Linear clean:
 
 - Everything is local-first and Linear is a publish target, so `wayfinder`'s local map is not a special case.
 - Frontier, blocking, and claim logic stop depending on Linear's relation semantics, so they work unchanged in personal repos and open source projects with no tracker at all.
-- Triage states become local labels, which is what makes triage usable on tickets I wrote myself without that process appearing on a team board.
+- Triage states become local labels, which is what makes triage usable on slices I wrote myself without that process appearing on a team board.
 
-This is a change to current behaviour: today's `to-spec` and `to-tickets` apply a `ready-for-agent` label to Linear, and they will stop.
+This is a change to current behaviour: today's `to-spec` and `to-slices` apply a `ready-for-agent` label to Linear, and they will stop.
 
 ### Concurrency across worktrees
 
 Because run state lives in the shared git directory, every worktree of a repo already resolves to the same one, which makes it the natural coordination point.
 
-Each ticket file records `status`, `blocked-by`, `branch` and `stack-parent`. A **claim is a directory**, not a field, because `mkdir` is atomic and a field is not: two worktrees racing both call `mkdir`, exactly one succeeds, and the winner writes a `holder` file naming its branch, worktree and session. A field would need read-modify-write, which has no atomic form in a shell script, and both racers would believe they had won. One file per ticket means concurrent writes to different tickets never collide. That is the whole mechanism; there is no lock manager.
+Each slice file records `status`, `blocked-by`, `branch` and `stack-parent`. A **claim is a directory**, not a field, because `mkdir` is atomic and a field is not: two worktrees racing both call `mkdir`, exactly one succeeds, and the winner writes a `holder` file naming its branch, worktree and session. A field would need read-modify-write, which has no atomic form in a shell script, and both racers would believe they had won. One file per slice means concurrent writes to different slices never collide. That is the whole mechanism; there is no lock manager.
 
-`cw status` enumerates live worktrees, their branches, their tmux sessions, and their claimed tickets. It is computed from `git worktree list`, `tmux has-session` and the claim directories rather than stored, so it cannot go stale. It skips worktrees git reports as `prunable`, which are registrations whose directory or `.git` file has gone; on a repo that has seen a few agent sessions those outnumber the live ones, and they are noise in a context window.
+`cw status` enumerates live worktrees, their branches, their tmux sessions, and their claimed slices. It is computed from `git worktree list`, `tmux has-session` and the claim directories rather than stored, so it cannot go stale. It skips worktrees git reports as `prunable`, which are registrations whose directory or `.git` file has gone; on a repo that has seen a few agent sessions those outnumber the live ones, and they are noise in a context window.
 
 The format is specified in [run-graph.md](run-graph.md).
 
@@ -113,19 +123,19 @@ So a published map is a parent issue and sub-issues carrying no labels at all �
 
 ### Stacked pull requests
 
-The run graph already holds what stacking needs, given two fields per ticket: `branch` and `stack-parent`.
+The run graph already holds what stacking needs, given two fields per slice: `branch` and `stack-parent`.
 
-A linear chain of blocking edges is a stack, and `to-tickets` marks chains as such. `wt-add <branch> <parent-branch>` already accepts a base override, which is the stack parent, so no change is needed there. `gh-stack` handles push, rebase, sync, and PR bodies. When a parent gets review changes and `gh-stack` restacks, the graph's edges identify which worktrees need rebasing.
+A linear chain of blocking edges is a stack, and `to-slices` marks chains as such. `wt-add <branch> <parent-branch>` already accepts a base override, which is the stack parent, so no change is needed there. `gh-stack` handles push, rebase, sync, and PR bodies. When a parent gets review changes and `gh-stack` restacks, the graph's edges identify which worktrees need rebasing.
 
-`implement-spec` therefore has two modes rather than Matt's single integration branch: **stack** (one PR per ticket, incrementally reviewable) and **integration** (everything onto one branch, one PR). It defaults to stack when the graph is a chain and integration when it is a wide fan-out, because a six-wide fan-out cannot be stacked.
+`implement-spec` therefore has two modes rather than Matt's single integration branch: **stack** (one PR per slice, incrementally reviewable) and **integration** (everything onto one branch, one PR). It defaults to stack when the graph is a chain and integration when it is a wide fan-out, because a six-wide fan-out cannot be stacked.
 
 ### Invocation split
 
 Matt's split between model-invoked and user-invoked skills rests on one invariant: **a user-invoked skill can never be called by another skill.** That invariant, plus the call graph, determines which side each skill lands on.
 
-Skills that must stay model-invoked, because other skills call them via the Skill tool: `grilling`, `domain-modeling`, `codebase-design`, `tdd`, `prototype`, `research`, `implement`, `review-loop`, `code-review`, and the `tmrw-standards` plugin's `commit` and `create-pr`. `codebase-design` belongs here because `tdd` and `improve-codebase-architecture` both reach it that way, and `implement` because `implement-spec` dispatches each ticket to it.
+Skills that must stay model-invoked, because other skills call them via the Skill tool: `grilling`, `domain-modeling`, `codebase-design`, `tdd`, `prototype`, `research`, `implement`, `review-loop`, `code-review`, and the `tmrw-standards` plugin's `commit` and `create-pr`. `codebase-design` belongs here because `tdd` and `improve-codebase-architecture` both reach it that way, and `implement` because `implement-spec` dispatches each slice to it.
 
-Skills that become user-invoked, with `disable-model-invocation: true`: `setup-workspace`, `grill-me`, `grill-issue`, `grill-with-docs`, `to-spec`, `to-tickets`, `triage`, `implement-spec`, `wayfinder`, `handoff`, `improve-codebase-architecture`, `self-review`, `apply-review`, `retro`, `diagnosing-bugs`, `wizard`.
+Skills that become user-invoked, with `disable-model-invocation: true`: `setup-workspace`, `grill-me`, `grill-issue`, `grill-with-docs`, `to-spec`, `to-slices`, `triage`, `implement-spec`, `wayfinder`, `handoff`, `improve-codebase-architecture`, `self-review`, `apply-review`, `retro`, `diagnosing-bugs`, `wizard`.
 
 ### A conflict to resolve first
 
@@ -143,7 +153,7 @@ A directory symlink cannot exclude entries, so `~/.claude/skills` and `~/.claude
 
 Added: `setup-workspace`, `grilling`, `domain-modeling`, `grill-with-docs`, `research`, `triage`, `implement`, `implement-spec`, `wayfinder`, `retro`, `diagnosing-bugs`, `codebase-design`, `wizard`. All built.
 
-Changed: `to-spec` and `to-tickets` move onto the run graph and stop writing labels to Linear; `grill-me` and `grill-issue` are rewired onto the extracted `grilling` primitive; `handoff` writes into the workspace instead of `mktemp`; the review skills gain the layer-aware deployment fix.
+Changed: `to-spec` and `to-slices` move onto the run graph and stop writing labels to Linear; `grill-me` and `grill-issue` are rewired onto the extracted `grilling` primitive; `handoff` writes into the workspace instead of `mktemp`; the review skills gain the layer-aware deployment fix.
 
 Not adopted: `teach`, and a router skill over the other skills.
 
@@ -198,12 +208,12 @@ Criteria marked **[tmrw]** cannot be validated in this repository and need a `~/
 
 Run graph format, claims, frontier, `cw status`, `SessionStart` hook.
 
-- A run with three tickets and a blocking chain exposes exactly one frontier ticket.
-- Claiming from worktree A succeeds; claiming the same ticket from worktree B fails.
-- Closing a blocker moves the next ticket onto the frontier.
+- A run with three slices and a blocking chain exposes exactly one frontier slice.
+- Claiming from worktree A succeeds; claiming the same slice from worktree B fails.
+- Closing a blocker moves the next slice onto the frontier.
 - `cw status` lists live worktrees, branches, sessions, and claims; killing a tmux session removes it from the output, which proves the output is computed rather than stored.
 - `cw close` on a blocker releases its claim as well as marking it done.
-- Opening a session in worktree B surfaces worktree A's branch and claimed ticket in context.
+- Opening a session in worktree B surfaces worktree A's branch and claimed slice in context.
 - `handoff` writes into the workspace rather than `mktemp`, names the skills the next agent should call, and redacts secrets.
 - A `prototype` run leaves its branch local and its pointer in the run graph, and pushes nothing.
 
@@ -220,34 +230,34 @@ Run graph format, claims, frontier, `cw status`, `SessionStart` hook.
 
 ### Phase 4 — Spec pipeline
 
-`to-spec`, `to-tickets`, `triage` on the run graph.
+`to-spec`, `to-slices`, `triage` on the run graph.
 
-- `to-tickets` on a spec produces N ticket files with correct edges and writes nothing to Linear.
+- `to-slices` on a spec produces N slice files with correct edges and writes nothing to Linear.
 - An explicit publish creates a Linear issue carrying no workflow labels.
-- `triage` moves a ticket through its states and writes an agent brief without touching Linear.
+- `triage` moves a slice through its states and writes an agent brief without touching Linear.
 - `tdd` names the seams under test and asks for confirmation before writing a test, using the same seams `to-spec` sketched.
 - `tdd` rejects a tautological test, one whose expected value is recomputed the way the code computes it.
 - `to-spec` saves the spec into the run graph, not the repo root.
-- `to-tickets` sets `stack-parent` where the graph is a chain, and verifies its own edges with `cw frontier`.
+- `to-slices` sets `stack-parent` where the graph is a chain, and verifies its own edges with `cw frontier`.
 - `to-spec` and `tdd` use the same words for seams, so the handoff between them is not a term the receiving end has never heard.
-- **[tmrw]** After a full `to-spec` → `to-tickets` → publish cycle, `git status` is clean and the TMRW Linear workspace has gained no workflow labels.
+- **[tmrw]** After a full `to-spec` → `to-slices` → publish cycle, `git status` is clean and the TMRW Linear workspace has gained no workflow labels.
 
 ### Phase 5 — Implement
 
-- `implement <ticket>` claims the ticket, creates a worktree through `wt-add`, builds, runs `review-loop`, commits, and releases the claim.
+- `implement <slice>` claims the slice, creates a worktree through `wt-add`, builds, runs `review-loop`, commits, and releases the claim.
 - A chain-shaped graph selects stack mode; a fan-out selects integration mode, decided by `cw shape` rather than by eye.
 - `cw shape` reads the edges, not the progress: a partly-worked chain is still a chain.
-- `implement` claims before it builds, and stops rather than working a ticket another session holds.
+- `implement` claims before it builds, and stops rather than working a slice another session holds.
 - `implement-spec` warns that subagents need `cw` on the permission allowlist before it spawns any.
-- **[tmrw]** `implement-spec` on a three-ticket chain produces three stacked PRs with correct base branches.
+- **[tmrw]** `implement-spec` on a three-slice chain produces three stacked PRs with correct base branches.
 
 ### Phase 6 — Wayfinder
 
-- A map and its tickets are created, claimed, worked and closed with no tracker configured at all.
+- A map and its slices are created, claimed, worked and closed with no tracker configured at all.
 - A map is a run: it reuses the frontier, claims and blocking edges rather than inventing a parallel mechanism, and its `type:` key is one `cw` neither needs nor minds.
 - Publishing produces a parent Linear issue and its sub-issues, carrying **no** labels.
 - After publishing, the local map keeps the fog and the decision detail; Linear is canonical for what the team reads.
-- A ticket worked with a human cannot be resolved by the agent answering itself.
+- A slice worked with a human cannot be resolved by the agent answering itself.
 
 ### Phase 7 — Health skills
 
@@ -264,14 +274,14 @@ A criterion written down is not a criterion met. The suites carry a lot of check
 
 **Proven by hand, once, in the session that built it.** `wt-add` unchanged and `--no-attach` not moving the client; the run graph surviving `wt-rm`; `setup-workspace` on this repo and on `tmrw-core-api`. The last two were executed step by step rather than invoked as a skill, so the skill's own prose is unexercised.
 
-**Proven in a real second worktree.** A worktree was created with `wt-add --no-attach`, a ticket claimed from the main checkout, and a headless session started in the worktree. It named the other worktree, its branch, its session and the claimed ticket from session-start context alone, and concluded on its own that the ticket belonged to someone else. The behaviour the hook exists for, not just the mechanism. The same worktree confirmed that a handoff written under `cw --state` is visible from the main checkout, and that a `prototype/<name>` branch gets no upstream and never reaches `origin`.
+**Proven in a real second worktree.** A worktree was created with `wt-add --no-attach`, a slice claimed from the main checkout, and a headless session started in the worktree. It named the other worktree, its branch, its session and the claimed slice from session-start context alone, and concluded on its own that the slice belonged to someone else. The behaviour the hook exists for, not just the mechanism. The same worktree confirmed that a handoff written under `cw --state` is visible from the main checkout, and that a `prototype/<name>` branch gets no upstream and never reaches `origin`.
 
 **Not yet proven.**
 
 - `grill-issue` has not been run since it was rewired onto `grilling`, and `review-loop` has not been run since it started resolving to the plugin's copy. Both need a `~/tmrw` repo and a live conversation.
 - The `handoff` and `grill-*` skills' own invocation is unexercised: they are user-invoked, so no headless run can fire them. Their underlying mechanisms are proven; the slash command itself needs a human.
 - "A skill that calls `code-review` still resolves it" is vacuous: nothing calls it until phase 5.
-- Phase 4 is prose a model follows, so its suite checks the constraints that prose must satisfy — no workflow labels, writes into the run graph, one vocabulary for seams — not that a model obeyed it. A full `to-spec` → `to-tickets` → publish cycle on a `~/tmrw` repo is still unrun.
+- Phase 4 is prose a model follows, so its suite checks the constraints that prose must satisfy — no workflow labels, writes into the run graph, one vocabulary for seams — not that a model obeyed it. A full `to-spec` → `to-slices` → publish cycle on a `~/tmrw` repo is still unrun.
 
 ### Almost nothing has actually been run
 
@@ -307,9 +317,9 @@ Bootstrap order, since phase 1 cannot track itself:
 1. Build phase 1 by hand, with ordinary commits.
 2. Run `setup-workspace` on this repo, as the first real use.
 3. Run a grilling and domain-modeling pass over the design conversation to produce `GLOSSARY.md`, pinning the vocabulary before phases 3 through 7 drift from it.
-4. Build phase 2, then seed the run graph with tickets for phases 3 through 7. From there the work tracks itself.
+4. Build phase 2, then seed the run graph with slices for phases 3 through 7. From there the work tracks itself.
 
-Step 3 was skipped at the time, and the cost showed up exactly where it was predicted: three review passes each caught vocabulary drift — `existing seams` against `seams that already exist`, `PRD` against `spec`, `issues` against `tickets`.
+Step 3 was skipped at the time, and the cost showed up exactly where it was predicted: three review passes each caught vocabulary drift — `existing seams` against `seams that already exist`, `PRD` against `spec`, `issues` against `slices`.
 
 It has since been done, after phase 4 and before phase 5. Writing the glossary immediately surfaced two more: `task graph` used for the run graph in five places, and a **factual** error in both tracker templates putting the run graph under the docs root rather than in the run state. <!-- glossary-exempt --> `tests/glossary.sh` now enforces every rejected synonym, which turns a recurring manual review finding into a check.
 
